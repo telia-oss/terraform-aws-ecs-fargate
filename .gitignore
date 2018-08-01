@@ -1,0 +1,7 @@
+# Terraform
+**/.terraform
+**/*.tfstate*
+crash.log
+
+# InteliJ IDE
+.idea/

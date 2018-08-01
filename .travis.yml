@@ -1,0 +1,18 @@
+dist: trusty
+sudo: false
+
+before_install:
+  - curl -fSL "https://releases.hashicorp.com/terraform/0.11.7/terraform_0.11.7_linux_amd64.zip" -o terraform.zip
+  - sudo unzip terraform.zip -d /opt/terraform
+  - sudo ln -s /opt/terraform/terraform /usr/bin/terraform
+  - rm -f terraform.zip
+  - curl -fSL https://github.com/wata727/tflint/releases/download/v0.7.0/tflint_linux_amd64.zip -o tflint.zip
+  - sudo unzip tflint.zip -d /opt/tflint
+  - sudo ln -s /opt/tflint/tflint /usr/bin/tflint
+  - rm -f tflint.zip
+
+notifications:
+  email: false
+
+script:
+  - make
