@@ -85,11 +85,11 @@ resource "aws_lb_target_group" "task" {
 # ECS Task/Service
 # ------------------------------------------------------------------------------
 data "null_data_source" "task_environment" {
-  count = "${var.task_definition_environment_count}"
+  count = "${var.task_container_environment_count}"
 
   inputs = {
-    name  = "${element(keys(var.task_definition_environment), count.index)}"
-    value = "${element(values(var.task_definition_environment), count.index)}"
+    name  = "${element(keys(var.task_container_environment), count.index)}"
+    value = "${element(values(var.task_container_environment), count.index)}"
   }
 }
 

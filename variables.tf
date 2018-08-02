@@ -60,12 +60,12 @@ variable "task_container_command" {
   default     = []
 }
 
-variable "task_definition_environment" {
+variable "task_container_environment" {
   description = "The environment variables to pass to a container."
   default     = {}
 }
 
-variable "task_definition_environment_count" {
+variable "task_container_environment_count" {
   description = "NOTE: This exists purely to calculate count in Terraform. Should equal the length of your environment map."
   default     = "0"
 }
