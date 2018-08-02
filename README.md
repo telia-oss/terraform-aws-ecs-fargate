@@ -7,7 +7,7 @@ Terraform module which creates Fargate ECS resources on AWS.
 
 ## Examples
 
-* [Complete AWS Fargate ECS example](https://github.com/telia-oss/terraform-aws-ecs-fargate/examples/default/example.tf)
+* [Complete AWS Fargate ECS example](https://github.com/telia-oss/terraform-aws-ecs-fargate/blob/master/examples/default/example.tf)
 
 ## Authors
 
