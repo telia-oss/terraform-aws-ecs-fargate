@@ -28,7 +28,7 @@ data "aws_iam_policy_document" "task_permissions" {
 }
 
 # Task ecr privileges
-data "aws_iam_policy_document" "task_ecr_permissions" {
+data "aws_iam_policy_document" "task_execution_permissions" {
   statement {
     effect = "Allow"
 
@@ -41,6 +41,8 @@ data "aws_iam_policy_document" "task_ecr_permissions" {
       "ecr:BatchCheckLayerAvailability",
       "ecr:GetDownloadUrlForLayer",
       "ecr:BatchGetImage",
+      "logs:CreateLogStream",
+      "logs:PutLogEvents",
     ]
   }
 }

@@ -23,7 +23,7 @@ resource "aws_iam_role" "execution" {
 resource "aws_iam_role_policy" "task_execution" {
   name   = "${var.name_prefix}-task-execution"
   role   = "${aws_iam_role.execution.id}"
-  policy = "${data.aws_iam_policy_document.task_ecr_permissions.json}"
+  policy = "${data.aws_iam_policy_document.task_execution_permissions.json}"
 }
 
 # ------------------------------------------------------------------------------
