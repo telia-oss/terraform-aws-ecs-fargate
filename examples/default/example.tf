@@ -6,8 +6,8 @@ provider "aws" {
   region = "eu-west-1"
 }
 
-resource "aws_ecs_cluster" "fargate_cluster" {
-  name = "example-ecs-fargate-cluster"
+resource "aws_ecs_cluster" "cluster" {
+  name = "example-ecs-cluster"
 }
 
 data "aws_vpc" "main" {
@@ -22,7 +22,7 @@ module "fargate_alb" {
   source  = "telia-oss/loadbalancer/aws"
   version = "0.1.0"
 
-  name_prefix = "example-ecs-fargate-cluster"
+  name_prefix = "example-ecs-cluster"
   type        = "application"
   internal    = "false"
   vpc_id      = "${data.aws_vpc.main.id}"
@@ -34,7 +34,7 @@ module "fargate_alb" {
   }
 }
 
-resource "aws_lb_listener" "fargate" {
+resource "aws_lb_listener" "alb" {
   load_balancer_arn = "${module.fargate_alb.arn}"
   port              = "80"
   protocol          = "HTTP"
@@ -45,7 +45,7 @@ resource "aws_lb_listener" "fargate" {
   }
 }
 
-resource "aws_security_group_rule" "fargate_task_ingress_8000" {
+resource "aws_security_group_rule" "task_ingress_8000" {
   security_group_id        = "${module.fargate.service_sg_id}"
   type                     = "ingress"
   protocol                 = "tcp"
@@ -54,23 +54,24 @@ resource "aws_security_group_rule" "fargate_task_ingress_8000" {
   source_security_group_id = "${module.fargate_alb.security_group_id}"
 }
 
-resource "aws_security_group_rule" "fargate_alb_ingress_80" {
+resource "aws_security_group_rule" "alb_ingress_80" {
   security_group_id = "${module.fargate_alb.security_group_id}"
   type              = "ingress"
   protocol          = "tcp"
   from_port         = "80"
   to_port           = "80"
   cidr_blocks       = ["0.0.0.0/0"]
+  ipv6_cidr_blocks  = ["::/0"]
 }
 
 module "fargate" {
   source = "../../"
 
-  name_prefix           = "example-fargate-app"
-  vpc_id                = "${data.aws_vpc.main.id}"
-  private_subnet_ids    = "${data.aws_subnet_ids.main.ids}"
-  cluster_id            = "${aws_ecs_cluster.fargate_cluster.id}"
-  task_definition_image = "crccheck/hello-world:latest"
+  name_prefix          = "example-app"
+  vpc_id               = "${data.aws_vpc.main.id}"
+  private_subnet_ids   = "${data.aws_subnet_ids.main.ids}"
+  cluster_id           = "${aws_ecs_cluster.cluster.id}"
+  task_container_image = "crccheck/hello-world:latest"
 
   // public ip is needed for default vpc, default is false
   task_container_assign_public_ip = "true"

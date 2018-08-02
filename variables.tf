@@ -6,7 +6,7 @@ variable "name_prefix" {
 }
 
 variable "vpc_id" {
-  description = "The ID of the VPC that this container will run in, needed for the Target Group"
+  description = "The VPC ID."
 }
 
 variable "private_subnet_ids" {
@@ -15,18 +15,18 @@ variable "private_subnet_ids" {
 }
 
 variable "cluster_id" {
-  description = "AWS ECS Cluster id"
+  description = "The Amazon Resource Name (ARN) that identifies the cluster."
 }
 
-variable "task_definition_image" {
-  description = "Image for the task definition (repo:tag or repo@digest)."
+variable "task_container_image" {
+  description = "The image used to start a container."
 }
 
 variable "lb_arn" {
   description = "Arn for the LB for which the service should be attach to."
 }
 
-variable "task_container_desired_count" {
+variable "desired_count" {
   description = "The number of instances of the task definitions to place and keep running."
   default     = "1"
 }
@@ -41,32 +41,37 @@ variable "task_container_port" {
 }
 
 variable "task_container_protocol" {
-  description = "Optional: Protocol that the container exposes."
+  description = "Protocol that the container exposes."
   default     = "HTTP"
 }
 
 variable "task_definition_cpu" {
-  description = "Optional: Amount of CPU to reserve for the task."
+  description = "Amount of CPU to reserve for the task."
   default     = "256"
 }
 
 variable "task_definition_memory" {
-  description = "Optional: Amount of memory to reserve for the task."
+  description = "The soft limit (in MiB) of memory to reserve for the container."
   default     = "512"
 }
 
+variable "task_container_command" {
+  description = "The command that is passed to the container."
+  default     = []
+}
+
 variable "task_definition_environment" {
-  description = "Optional: Map of key = value pairs for the environment."
+  description = "The environment variables to pass to a container."
   default     = {}
 }
 
 variable "task_definition_environment_count" {
-  description = "Required if task_definition_environment is used : Number of environment variables in task_definition_environment."
+  description = "NOTE: This exists purely to calculate count in Terraform. Should equal the length of your environment map."
   default     = "0"
 }
 
 variable "log_retention_in_days" {
-  description = "Optional: Number of days the logs will be retained in CloudWatch."
+  description = "Number of days the logs will be retained in CloudWatch."
   default     = "30"
 }
 

@@ -23,7 +23,7 @@ resource "aws_iam_role" "execution" {
 resource "aws_iam_role_policy" "task_execution" {
   name   = "${var.name_prefix}-task-execution"
   role   = "${aws_iam_role.execution.id}"
-  policy = "${data.aws_iam_policy_document.task_execution_permissions.json}"
+  policy = "${data.aws_iam_policy_document.task_ecr_permissions.json}"
 }
 
 # ------------------------------------------------------------------------------
@@ -48,7 +48,7 @@ resource "aws_security_group" "ecs_service" {
   vpc_id      = "${var.vpc_id}"
   name        = "${var.name_prefix}-ecs-service-sg"
   description = "Fargate service security group"
-  tags        = "${var.tags}"
+  tags        = "${merge(var.tags, map("Name", "${var.name_prefix}-sg"))}"
 }
 
 resource "aws_security_group_rule" "ingress_service" {
@@ -58,6 +58,7 @@ resource "aws_security_group_rule" "ingress_service" {
   from_port         = "8"
   to_port           = "0"
   cidr_blocks       = ["0.0.0.0/0"]
+  ipv6_cidr_blocks  = ["::/0"]
 }
 
 resource "aws_security_group_rule" "egress_service" {
@@ -67,6 +68,7 @@ resource "aws_security_group_rule" "egress_service" {
   from_port         = 0
   to_port           = 0
   cidr_blocks       = ["0.0.0.0/0"]
+  ipv6_cidr_blocks  = ["::/0"]
 }
 
 # ------------------------------------------------------------------------------
@@ -112,9 +114,8 @@ resource "aws_ecs_task_definition" "task" {
 
   container_definitions = <<EOF
 [{
-    "cpu":0,
     "name": "${var.name_prefix}",
-    "image": "${var.task_definition_image}",
+    "image": "${var.task_container_image}",
     "essential": true,
     "portMappings": [
         {
@@ -131,6 +132,7 @@ resource "aws_ecs_task_definition" "task" {
             "awslogs-stream-prefix": "container"
         }
     },
+    "command": ${jsonencode(var.task_container_command)},
     "environment": ${jsonencode(data.null_data_source.task_environment.*.outputs)}
 }]
 EOF
@@ -141,7 +143,7 @@ resource "aws_ecs_service" "service" {
   name                               = "${var.name_prefix}"
   cluster                            = "${var.cluster_id}"
   task_definition                    = "${aws_ecs_task_definition.task.arn}"
-  desired_count                      = "${var.task_container_desired_count}"
+  desired_count                      = "${var.desired_count}"
   launch_type                        = "FARGATE"
   deployment_minimum_healthy_percent = 50
   deployment_maximum_percent         = 200
