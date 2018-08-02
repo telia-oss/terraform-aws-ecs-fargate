@@ -1,5 +1,5 @@
 # ----------------------------------------
-# Create a service fargate
+# Create a ecs service using fargate
 # ----------------------------------------
 
 provider "aws" {
