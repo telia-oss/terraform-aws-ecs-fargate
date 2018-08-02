@@ -5,3 +5,5 @@ crash.log
 
 # InteliJ IDE
 .idea/
+# Visual Studio Code
+.vs/
