@@ -5,6 +5,11 @@ variable "name_prefix" {
   description = "A prefix used for naming resources."
 }
 
+variable "container_name" {
+  description = "Optional name for the container. If not specified, name_prefix will be used. Useful when when constructing an imagedefinitons.json file for continuous deployment using Codepipeline."
+  default = ""
+}
+
 variable "vpc_id" {
   description = "The VPC ID."
 }

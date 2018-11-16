@@ -146,7 +146,7 @@ resource "aws_ecs_service" "service" {
   }
 
   load_balancer {
-    container_name   = "${var.name_prefix}"
+    container_name   = "${var.container_name == "" ? var.name_prefix : var.container_name}"
     container_port   = "${var.task_container_port}"
     target_group_arn = "${aws_lb_target_group.task.arn}"
   }
