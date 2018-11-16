@@ -104,7 +104,7 @@ resource "aws_ecs_task_definition" "task" {
 
   container_definitions = <<EOF
 [{
-    "name": "${var.name_prefix}",
+    "name": "${var.container_name == "" ? var.name_prefix : var.container_name}",
     "image": "${var.task_container_image}",
     "essential": true,
     "portMappings": [
