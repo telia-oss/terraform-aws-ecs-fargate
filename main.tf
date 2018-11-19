@@ -94,6 +94,7 @@ data "null_data_source" "task_environment" {
 }
 
 resource "aws_ecs_task_definition" "task" {
+  id = "${var.name_prefix}"
   family                   = "${var.name_prefix}"
   execution_role_arn       = "${aws_iam_role.execution.arn}"
   network_mode             = "awsvpc"
