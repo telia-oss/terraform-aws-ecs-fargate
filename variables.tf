@@ -7,7 +7,7 @@ variable "name_prefix" {
 
 variable "container_name" {
   description = "Optional name for the container. If not specified, name_prefix will be used. Useful when when constructing an imagedefinitons.json file for continuous deployment using Codepipeline."
-  default = ""
+  default     = ""
 }
 
 variable "vpc_id" {
