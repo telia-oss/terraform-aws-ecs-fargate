@@ -7,7 +7,7 @@ output "service_arn" {
 }
 
 output "service_name" {
-  description = "TThe name of the service."
+  description = "The name of the service."
   value       = "${aws_ecs_service.service.name}"
 }
 
