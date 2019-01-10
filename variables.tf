@@ -90,3 +90,13 @@ variable "tags" {
   type        = "map"
   default     = {}
 }
+
+variable "deployment_minimum_healthy_percent" {
+  default     = "50"
+  description = "The lower limit of the number of running tasks that must remain running and healthy in a service during a deployment"
+}
+
+variable "deployment_maximum_percent" {
+  default     = "200"
+  description = "The upper limit of the number of running tasks that can be running in a service during a deployment"
+}
