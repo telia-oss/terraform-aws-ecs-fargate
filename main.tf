@@ -135,8 +135,8 @@ resource "aws_ecs_service" "service" {
   task_definition                    = "${aws_ecs_task_definition.task.arn}"
   desired_count                      = "${var.desired_count}"
   launch_type                        = "FARGATE"
-  deployment_minimum_healthy_percent = 50
-  deployment_maximum_percent         = 200
+  deployment_minimum_healthy_percent = "${var.deployment_minimum_healthy_percent}"
+  deployment_maximum_percent         = "${var.deployment_maximum_percent}"
   health_check_grace_period_seconds  = "${var.health_check_grace_period_seconds}"
 
   network_configuration {
