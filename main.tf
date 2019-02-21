@@ -26,6 +26,13 @@ resource "aws_iam_role_policy" "task_execution" {
   policy = "${data.aws_iam_policy_document.task_execution_permissions.json}"
 }
 
+resource "aws_iam_role_policy" "read_repository_credentials" {
+  count  = "${length(var.repository_credentials) != 0 ? 1 : 0}"
+  name   = "${var.name_prefix}-read-repository-credentials"
+  role   = "${aws_iam_role.execution.id}"
+  policy = "${data.aws_iam_policy_document.read_repository_credentials.json}"
+}
+
 # ------------------------------------------------------------------------------
 # IAM - Task role, basic. Users of the module will append policies to this role
 # when they use the module. S3, Dynamo permissions etc etc.
@@ -106,6 +113,7 @@ resource "aws_ecs_task_definition" "task" {
 [{
     "name": "${var.name_prefix}",
     "image": "${var.task_container_image}",
+    ${local.repository_credentials_rendered}
     "essential": true,
     "portMappings": [
         {

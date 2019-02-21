@@ -106,3 +106,21 @@ variable "deployment_controller_type" {
   type        = "string"
   description = "Type of deployment controller. Valid values: CODE_DEPLOY, ECS."
 }
+
+# https://docs.aws.amazon.com/AmazonECS/latest/developerguide/private-auth.html
+variable "repository_credentials" {
+  default     = ""
+  description = "name or ARN of a secrets manager secret (arn:aws:secretsmanager:region:aws_account_id:secret:secret_name)"
+}
+
+locals {
+  # if the variable is set, create the fragment based on the variable value
+  # if not, just return a empty string to not mess up the json
+  repository_credentials_fragment = <<EOF
+        "repositoryCredentials": {
+            "credentialsParameter": "${var.repository_credentials}"
+        },
+EOF
+
+  repository_credentials_rendered = "${var.repository_credentials == "" ? "" : local.repository_credentials_fragment}"
+}

@@ -46,3 +46,17 @@ data "aws_iam_policy_document" "task_execution_permissions" {
     ]
   }
 }
+
+data "aws_iam_policy_document" "read_repository_credentials" {
+  statement {
+    effect = "Allow"
+
+    resources = [
+      "${var.repository_credentials}",
+    ]
+
+    actions = [
+      "secretsmanager:GetSecretValue",
+    ]
+  }
+}
