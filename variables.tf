@@ -80,6 +80,15 @@ variable "health_check" {
   type        = "map"
 }
 
+variable "stickiness" {
+  description = "A Stickiness block. Stickiness is only valid if used with Load Balancers of type Application."
+
+  default = {
+    type    = "lb_cookie"
+    enabled = true
+  }
+}
+
 variable "health_check_grace_period_seconds" {
   default     = "300"
   description = "Seconds to ignore failing load balancer health checks on newly instantiated tasks to prevent premature shutdown, up to 7200. Only valid for services configured to use load balancers."
