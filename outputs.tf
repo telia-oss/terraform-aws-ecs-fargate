@@ -27,6 +27,6 @@ output "service_sg_id" {
 }
 
 output "log_group_name" {
-  description = "Log group name of the task."
+  description = "The name of the Cloudwatch log group for the task."
   value       = "${aws_cloudwatch_log_group.main.name}"
 }
