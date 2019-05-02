@@ -23,7 +23,7 @@ output "task_role_arn" {
 
 output "execution_role_arn" {
   description = "The Amazon Resource Name (ARN) specifying the task execution role."
-  value       = "${aws_iam_role.execution}"
+  value       = "${aws_iam_role.execution.arn}"
 }
 
 output "task_role_name" {
