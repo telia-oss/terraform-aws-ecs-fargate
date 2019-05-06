@@ -100,3 +100,9 @@ variable "deployment_maximum_percent" {
   default     = "200"
   description = "The upper limit of the number of running tasks that can be running in a service during a deployment"
 }
+
+variable "deployment_controller_type" {
+  default     = "ECS"
+  type        = "string"
+  description = "Type of deployment controller. Valid values: CODE_DEPLOY, ECS."
+}

@@ -150,6 +150,11 @@ resource "aws_ecs_service" "service" {
     container_port   = "${var.task_container_port}"
     target_group_arn = "${aws_lb_target_group.task.arn}"
   }
+
+  deployment_controller {
+    # The deployment controller type to use. Valid values: CODE_DEPLOY, ECS.
+    type = "${var.deployment_controller_type}"
+  }
 }
 
 # HACK: The workaround used in ecs/service does not work for some reason in this module, this fixes the following error:
