@@ -11,6 +11,11 @@ output "target_group_arn" {
   value       = "${aws_lb_target_group.task.arn}"
 }
 
+output "target_group_name" {
+  description = "The Name of the Target Group."
+  value       = "${aws_lb_target_group.task.name}"
+}
+
 output "task_role_arn" {
   description = "The Amazon Resource Name (ARN) specifying the service role."
   value       = "${aws_iam_role.task.arn}"
