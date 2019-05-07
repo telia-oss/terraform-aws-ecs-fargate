@@ -113,6 +113,11 @@ variable "repository_credentials" {
   description = "name or ARN of a secrets manager secret (arn:aws:secretsmanager:region:aws_account_id:secret:secret_name)"
 }
 
+variable "repository_credentials_kms_key" {
+  default     = "alias/aws/secretsmanager"
+  description = "key id, key ARN, alias name or alias ARN of the key that encrypted the repository credentials"
+}
+
 locals {
   # if the variable is set, create the fragment based on the variable value
   # if not, just return a empty string to not mess up the json
