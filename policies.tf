@@ -46,3 +46,23 @@ data "aws_iam_policy_document" "task_execution_permissions" {
     ]
   }
 }
+
+data "aws_kms_key" "secretsmanager_key" {
+  key_id = "${var.repository_credentials_kms_key}"
+}
+
+data "aws_iam_policy_document" "read_repository_credentials" {
+  statement {
+    effect = "Allow"
+
+    resources = [
+      "${var.repository_credentials}",
+      "${data.aws_kms_key.secretsmanager_key.arn}",
+    ]
+
+    actions = [
+      "secretsmanager:GetSecretValue",
+      "kms:Decrypt",
+    ]
+  }
+}
