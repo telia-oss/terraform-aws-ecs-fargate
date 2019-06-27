@@ -39,4 +39,13 @@ output "service_sg_id" {
 output "task_definition_arn" {
   description = "The ARN of the task definition."
   value       = "${element(compact(concat(aws_ecs_task_definition.task_for_code_deploy.*.arn, aws_ecs_task_definition.task.*.arn)), 0)}"
+
+output "service_name" {
+  description = "The name of the service."
+  value       = "${aws_ecs_service.service.name}"
+}
+
+output "log_group_name" {
+  description = "The name of the Cloudwatch log group for the task."
+  value       = "${aws_cloudwatch_log_group.main.name}"
 }
