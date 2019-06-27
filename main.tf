@@ -155,6 +155,10 @@ resource "aws_ecs_service" "service" {
     # The deployment controller type to use. Valid values: CODE_DEPLOY, ECS.
     type = "${var.deployment_controller_type}"
   }
+
+  lifecycle {
+    ignore_changes = ["${var.ecs_service_ignored_changes}"]
+  }
 }
 
 # HACK: The workaround used in ecs/service does not work for some reason in this module, this fixes the following error:
