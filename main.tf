@@ -93,7 +93,50 @@ data "null_data_source" "task_environment" {
   }
 }
 
+resource "aws_ecs_task_definition" "task_for_code_deploy" {
+  count = "${var.deployment_controller_type == "CODE_DEPLOY" ? 1 : 0}"
+
+  family                   = "${var.name_prefix}"
+  execution_role_arn       = "${aws_iam_role.execution.arn}"
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = "${var.task_definition_cpu}"
+  memory                   = "${var.task_definition_memory}"
+  task_role_arn            = "${aws_iam_role.task.arn}"
+
+  container_definitions = <<EOF
+[{
+    "name": "${var.name_prefix}",
+    "image": "${var.task_container_image}",
+    "essential": true,
+    "portMappings": [
+        {
+            "containerPort": ${var.task_container_port},
+            "hostPort": ${var.task_container_port},
+            "protocol":"tcp"
+        }
+    ],
+    "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+            "awslogs-group": "${aws_cloudwatch_log_group.main.name}",
+            "awslogs-region": "${data.aws_region.current.name}",
+            "awslogs-stream-prefix": "container"
+        }
+    },
+    "command": ${jsonencode(var.task_container_command)},
+    "environment": ${jsonencode(data.null_data_source.task_environment.*.outputs)}
+}]
+EOF
+
+  lifecycle {
+    ignore_changes = ["container_definitions"]
+  }
+}
+
 resource "aws_ecs_task_definition" "task" {
+  count = "${var.deployment_controller_type == "CODE_DEPLOY" ? 0 : 1}"
+
   family                   = "${var.name_prefix}"
   execution_role_arn       = "${aws_iam_role.execution.arn}"
   network_mode             = "awsvpc"
@@ -128,11 +171,13 @@ resource "aws_ecs_task_definition" "task" {
 EOF
 }
 
-resource "aws_ecs_service" "service" {
+resource "aws_ecs_service" "code_deployed_service" {
+  count = "${var.deployment_controller_type == "CODE_DEPLOY" ? 1 : 0}"
+
   depends_on                         = ["null_resource.lb_exists"]
   name                               = "${var.name_prefix}"
   cluster                            = "${var.cluster_id}"
-  task_definition                    = "${aws_ecs_task_definition.task.arn}"
+  task_definition                    = "${element(compact(concat(aws_ecs_task_definition.task_for_code_deploy.*.arn, aws_ecs_task_definition.task.*.arn)), 0)}"
   desired_count                      = "${var.desired_count}"
   launch_type                        = "FARGATE"
   deployment_minimum_healthy_percent = "${var.deployment_minimum_healthy_percent}"
@@ -157,7 +202,38 @@ resource "aws_ecs_service" "service" {
   }
 
   lifecycle {
-    ignore_changes = ["${var.ecs_service_ignored_changes}"]
+    ignore_changes = ["desired_count", "task_definition"]
+  }
+}
+
+resource "aws_ecs_service" "service" {
+  count = "${var.deployment_controller_type == "CODE_DEPLOY" ? 0 : 1}"
+
+  depends_on                         = ["null_resource.lb_exists"]
+  name                               = "${var.name_prefix}"
+  cluster                            = "${var.cluster_id}"
+  task_definition                    = "${element(compact(concat(aws_ecs_task_definition.task_for_code_deploy.*.arn, aws_ecs_task_definition.task.*.arn)), 0)}"
+  desired_count                      = "${var.desired_count}"
+  launch_type                        = "FARGATE"
+  deployment_minimum_healthy_percent = "${var.deployment_minimum_healthy_percent}"
+  deployment_maximum_percent         = "${var.deployment_maximum_percent}"
+  health_check_grace_period_seconds  = "${var.health_check_grace_period_seconds}"
+
+  network_configuration {
+    subnets          = ["${var.private_subnet_ids}"]
+    security_groups  = ["${aws_security_group.ecs_service.id}"]
+    assign_public_ip = "${var.task_container_assign_public_ip}"
+  }
+
+  load_balancer {
+    container_name   = "${var.name_prefix}"
+    container_port   = "${var.task_container_port}"
+    target_group_arn = "${aws_lb_target_group.task.arn}"
+  }
+
+  deployment_controller {
+    # The deployment controller type to use. Valid values: CODE_DEPLOY, ECS.
+    type = "${var.deployment_controller_type}"
   }
 }
 

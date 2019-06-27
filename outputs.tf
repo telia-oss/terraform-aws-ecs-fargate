@@ -3,7 +3,7 @@
 # ------------------------------------------------------------------------------
 output "service_arn" {
   description = "The Amazon Resource Name (ARN) that identifies the service."
-  value       = "${aws_ecs_service.service.id}"
+  value       = "${element(compact(concat(aws_ecs_service.code_deployed_service.*.id, aws_ecs_service.service.*.id)), 0)}"
 }
 
 output "target_group_arn" {
@@ -38,5 +38,5 @@ output "service_sg_id" {
 
 output "task_definition_arn" {
   description = "The ARN of the task definition."
-  value       = "${aws_ecs_task_definition.task.arn}"
+  value       = "${element(compact(concat(aws_ecs_task_definition.task_for_code_deploy.*.arn, aws_ecs_task_definition.task.*.arn)), 0)}"
 }

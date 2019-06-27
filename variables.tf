@@ -106,9 +106,3 @@ variable "deployment_controller_type" {
   type        = "string"
   description = "Type of deployment controller. Valid values: CODE_DEPLOY, ECS."
 }
-
-variable "ecs_service_ignored_changes" {
-  type = "list"
-  default = []
-  description = "Any ECS service changes to ignore when updating configuration with terraform"
-}
