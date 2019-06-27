@@ -31,6 +31,12 @@ variable "desired_count" {
   default     = "1"
 }
 
+variable "service_ignore_changes" {
+  description = "Allow external changes to parameters without Terraform plan difference. i.e. desired_count updated by autoscaler."
+  type        = "list"
+  default     = []
+}
+
 variable "task_container_assign_public_ip" {
   description = "Assigned public IP to the container."
   default     = "false"
