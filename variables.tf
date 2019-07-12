@@ -5,8 +5,13 @@ variable "name_prefix" {
   description = "A prefix used for naming resources."
 }
 
+variable "override_container_name" {
+  description = "True if the container name should be overridden by the value specified in the container_name variable"
+  default = false
+}
+
 variable "container_name" {
-  description = "Optional name for the container. If not specified, name_prefix will be used. Useful when when constructing an imagedefinitons.json file for continuous deployment using Codepipeline."
+  description = "Optional name for the container to be used instead of name_prefix. Useful when when constructing an imagedefinitons.json file for continuous deployment using Codepipeline."
   default     = ""
 }
 
