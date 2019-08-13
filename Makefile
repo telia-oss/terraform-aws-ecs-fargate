@@ -5,7 +5,7 @@ default: test
 
 test:
 	@echo "== Test =="
-	@if ! terraform fmt -write=false -check=true >> /dev/null; then \
+	@if ! terraform fmt -recursive -write=false -check=true >> /dev/null; then \
 		echo "✗ terraform fmt (Some files need to be formatted, run 'terraform fmt' to fix.)"; \
 		exit 1; \
 	else \

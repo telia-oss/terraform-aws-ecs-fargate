@@ -1,15 +1,16 @@
 # ------------------------------------------------------------------------------
 # AWS
 # ------------------------------------------------------------------------------
-data "aws_region" "current" {}
+data "aws_region" "current" {
+}
 
 # ------------------------------------------------------------------------------
 # Cloudwatch
 # ------------------------------------------------------------------------------
 resource "aws_cloudwatch_log_group" "main" {
-  name              = "${var.name_prefix}"
-  retention_in_days = "${var.log_retention_in_days}"
-  tags              = "${var.tags}"
+  name              = var.name_prefix
+  retention_in_days = var.log_retention_in_days
+  tags              = var.tags
 }
 
 # ------------------------------------------------------------------------------
@@ -17,20 +18,20 @@ resource "aws_cloudwatch_log_group" "main" {
 # ------------------------------------------------------------------------------
 resource "aws_iam_role" "execution" {
   name               = "${var.name_prefix}-task-execution-role"
-  assume_role_policy = "${data.aws_iam_policy_document.task_assume.json}"
+  assume_role_policy = data.aws_iam_policy_document.task_assume.json
 }
 
 resource "aws_iam_role_policy" "task_execution" {
   name   = "${var.name_prefix}-task-execution"
-  role   = "${aws_iam_role.execution.id}"
-  policy = "${data.aws_iam_policy_document.task_execution_permissions.json}"
+  role   = aws_iam_role.execution.id
+  policy = data.aws_iam_policy_document.task_execution_permissions.json
 }
 
 resource "aws_iam_role_policy" "read_repository_credentials" {
-  count  = "${length(var.repository_credentials) != 0 ? 1 : 0}"
+  count  = length(var.repository_credentials) != 0 ? 1 : 0
   name   = "${var.name_prefix}-read-repository-credentials"
-  role   = "${aws_iam_role.execution.id}"
-  policy = "${data.aws_iam_policy_document.read_repository_credentials.json}"
+  role   = aws_iam_role.execution.id
+  policy = data.aws_iam_policy_document.read_repository_credentials.json
 }
 
 # ------------------------------------------------------------------------------
@@ -39,27 +40,32 @@ resource "aws_iam_role_policy" "read_repository_credentials" {
 # ------------------------------------------------------------------------------
 resource "aws_iam_role" "task" {
   name               = "${var.name_prefix}-task-role"
-  assume_role_policy = "${data.aws_iam_policy_document.task_assume.json}"
+  assume_role_policy = data.aws_iam_policy_document.task_assume.json
 }
 
 resource "aws_iam_role_policy" "log_agent" {
   name   = "${var.name_prefix}-log-permissions"
-  role   = "${aws_iam_role.task.id}"
-  policy = "${data.aws_iam_policy_document.task_permissions.json}"
+  role   = aws_iam_role.task.id
+  policy = data.aws_iam_policy_document.task_permissions.json
 }
 
 # ------------------------------------------------------------------------------
 # Security groups
 # ------------------------------------------------------------------------------
 resource "aws_security_group" "ecs_service" {
-  vpc_id      = "${var.vpc_id}"
+  vpc_id      = var.vpc_id
   name        = "${var.name_prefix}-ecs-service-sg"
   description = "Fargate service security group"
-  tags        = "${merge(var.tags, map("Name", "${var.name_prefix}-sg"))}"
+  tags = merge(
+    var.tags,
+    {
+      Name = "${var.name_prefix}-sg"
+    },
+  )
 }
 
 resource "aws_security_group_rule" "egress_service" {
-  security_group_id = "${aws_security_group.ecs_service.id}"
+  security_group_id = aws_security_group.ecs_service.id
   type              = "egress"
   protocol          = "-1"
   from_port         = 0
@@ -72,11 +78,24 @@ resource "aws_security_group_rule" "egress_service" {
 # LB Target group
 # ------------------------------------------------------------------------------
 resource "aws_lb_target_group" "task" {
-  vpc_id       = "${var.vpc_id}"
-  protocol     = "${var.task_container_protocol}"
-  port         = "${var.task_container_port}"
-  target_type  = "ip"
-  health_check = ["${var.health_check}"]
+  vpc_id      = var.vpc_id
+  protocol    = var.task_container_protocol
+  port        = var.task_container_port
+  target_type = "ip"
+  dynamic "health_check" {
+    for_each = [var.health_check]
+    content {
+      enabled             = lookup(health_check.value, "enabled", null)
+      healthy_threshold   = lookup(health_check.value, "healthy_threshold", null)
+      interval            = lookup(health_check.value, "interval", null)
+      matcher             = lookup(health_check.value, "matcher", null)
+      path                = lookup(health_check.value, "path", null)
+      port                = lookup(health_check.value, "port", null)
+      protocol            = lookup(health_check.value, "protocol", null)
+      timeout             = lookup(health_check.value, "timeout", null)
+      unhealthy_threshold = lookup(health_check.value, "unhealthy_threshold", null)
+    }
+  }
 
   # NOTE: TF is unable to destroy a target group while a listener is attached,
   # therefor we have to create a new one before destroying the old. This also means
@@ -85,29 +104,34 @@ resource "aws_lb_target_group" "task" {
     create_before_destroy = true
   }
 
-  tags = "${merge(var.tags, map("Name", "${var.name_prefix}-target-${var.task_container_port}"))}"
+  tags = merge(
+    var.tags,
+    {
+      Name = "${var.name_prefix}-target-${var.task_container_port}"
+    },
+  )
 }
 
 # ------------------------------------------------------------------------------
 # ECS Task/Service
 # ------------------------------------------------------------------------------
 data "null_data_source" "task_environment" {
-  count = "${var.task_container_environment_count}"
+  count = var.task_container_environment_count
 
   inputs = {
-    name  = "${element(keys(var.task_container_environment), count.index)}"
-    value = "${element(values(var.task_container_environment), count.index)}"
+    name  = element(keys(var.task_container_environment), count.index)
+    value = element(values(var.task_container_environment), count.index)
   }
 }
 
 resource "aws_ecs_task_definition" "task" {
-  family                   = "${var.name_prefix}"
-  execution_role_arn       = "${aws_iam_role.execution.arn}"
+  family                   = var.name_prefix
+  execution_role_arn       = aws_iam_role.execution.arn
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
-  cpu                      = "${var.task_definition_cpu}"
-  memory                   = "${var.task_definition_memory}"
-  task_role_arn            = "${aws_iam_role.task.arn}"
+  cpu                      = var.task_definition_cpu
+  memory                   = var.task_definition_memory
+  task_role_arn            = aws_iam_role.task.arn
 
   container_definitions = <<EOF
 [{
@@ -134,34 +158,35 @@ resource "aws_ecs_task_definition" "task" {
     "environment": ${jsonencode(data.null_data_source.task_environment.*.outputs)}
 }]
 EOF
+
 }
 
 resource "aws_ecs_service" "service" {
-  depends_on                         = ["null_resource.lb_exists"]
-  name                               = "${var.name_prefix}"
-  cluster                            = "${var.cluster_id}"
-  task_definition                    = "${aws_ecs_task_definition.task.arn}"
-  desired_count                      = "${var.desired_count}"
+  depends_on                         = [null_resource.lb_exists]
+  name                               = var.name_prefix
+  cluster                            = var.cluster_id
+  task_definition                    = aws_ecs_task_definition.task.arn
+  desired_count                      = var.desired_count
   launch_type                        = "FARGATE"
-  deployment_minimum_healthy_percent = "${var.deployment_minimum_healthy_percent}"
-  deployment_maximum_percent         = "${var.deployment_maximum_percent}"
-  health_check_grace_period_seconds  = "${var.health_check_grace_period_seconds}"
+  deployment_minimum_healthy_percent = var.deployment_minimum_healthy_percent
+  deployment_maximum_percent         = var.deployment_maximum_percent
+  health_check_grace_period_seconds  = var.health_check_grace_period_seconds
 
   network_configuration {
-    subnets          = ["${var.private_subnet_ids}"]
-    security_groups  = ["${aws_security_group.ecs_service.id}"]
-    assign_public_ip = "${var.task_container_assign_public_ip}"
+    subnets          = var.private_subnet_ids
+    security_groups  = [aws_security_group.ecs_service.id]
+    assign_public_ip = var.task_container_assign_public_ip
   }
 
   load_balancer {
-    container_name   = "${var.container_name != "" ? var.container_name : var.name_prefix}"
-    container_port   = "${var.task_container_port}"
-    target_group_arn = "${aws_lb_target_group.task.arn}"
+    container_name   = var.container_name != "" ? var.container_name : var.name_prefix
+    container_port   = var.task_container_port
+    target_group_arn = aws_lb_target_group.task.arn
   }
 
   deployment_controller {
     # The deployment controller type to use. Valid values: CODE_DEPLOY, ECS.
-    type = "${var.deployment_controller_type}"
+    type = var.deployment_controller_type
   }
 }
 
@@ -170,7 +195,8 @@ resource "aws_ecs_service" "service" {
 # see https://github.com/hashicorp/terraform/issues/12634.
 # Service depends on this resources which prevents it from being created until the LB is ready
 resource "null_resource" "lb_exists" {
-  triggers {
-    alb_name = "${var.lb_arn}"
+  triggers = {
+    alb_name = var.lb_arn
   }
 }
+
