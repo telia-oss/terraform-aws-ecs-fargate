@@ -170,7 +170,7 @@ resource "aws_ecs_service" "service" {
 # see https://github.com/hashicorp/terraform/issues/12634.
 # Service depends on this resources which prevents it from being created until the LB is ready
 resource "null_resource" "lb_exists" {
-  triggers {
+  triggers = {
     alb_name = "${var.lb_arn}"
   }
 }
