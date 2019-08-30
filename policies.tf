@@ -17,7 +17,7 @@ data "aws_iam_policy_document" "task_permissions" {
     effect = "Allow"
 
     resources = [
-      "${aws_cloudwatch_log_group.main.arn}",
+      aws_cloudwatch_log_group.main.arn,
     ]
 
     actions = [
@@ -48,7 +48,7 @@ data "aws_iam_policy_document" "task_execution_permissions" {
 }
 
 data "aws_kms_key" "secretsmanager_key" {
-  key_id = "${var.repository_credentials_kms_key}"
+  key_id = var.repository_credentials_kms_key
 }
 
 data "aws_iam_policy_document" "read_repository_credentials" {
@@ -56,8 +56,8 @@ data "aws_iam_policy_document" "read_repository_credentials" {
     effect = "Allow"
 
     resources = [
-      "${var.repository_credentials}",
-      "${data.aws_kms_key.secretsmanager_key.arn}",
+      var.repository_credentials,
+      data.aws_kms_key.secretsmanager_key.arn,
     ]
 
     actions = [
@@ -66,3 +66,4 @@ data "aws_iam_policy_document" "read_repository_credentials" {
     ]
   }
 }
+
