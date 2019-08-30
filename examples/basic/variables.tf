@@ -1,6 +1,6 @@
 variable "name_prefix" {
   type    = string
-  default = "ecs-fargate-basic-example"
+  default = "fargate-basic-example"
 }
 
 variable "region" {

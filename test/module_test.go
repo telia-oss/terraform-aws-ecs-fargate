@@ -21,7 +21,7 @@ func TestModule(t *testing.T) {
 		{
 			description: "basic example",
 			directory:   "../examples/basic",
-			name:        fmt.Sprintf("ecs-fargate-basic-test-%s", random.UniqueId()),
+			name:        fmt.Sprintf("fargate-basic-test-%s", random.UniqueId()),
 			region:      "eu-west-1",
 			expected:    ecs.Expectations{},
 		},
