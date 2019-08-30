@@ -23,7 +23,18 @@ func TestModule(t *testing.T) {
 			directory:   "../examples/basic",
 			name:        fmt.Sprintf("fargate-basic-test-%s", random.UniqueId()),
 			region:      "eu-west-1",
-			expected:    ecs.Expectations{},
+			expected: ecs.Expectations{
+				DesiredTaskCount: 1,
+				TaskCPU:          256,
+				TaskMemory:       512,
+				ContainerImage:   "crccheck/hello-world:latest",
+				NetworkMode:      "awsvpc",
+				GetResponse: []string{
+					`Hello World`,
+					`~~~ {~~ ~~~~ ~~~ ~~~~ ~~ ~ /  ===- ~~~`,
+					`\______ o          _,/`,
+				},
+			},
 		},
 	}
 
@@ -47,7 +58,13 @@ func TestModule(t *testing.T) {
 			defer terraform.Destroy(t, options)
 			terraform.InitAndApply(t, options)
 
-			ecs.RunTestSuite(t, tc.region, tc.expected)
+			ecs.RunTestSuite(t,
+				terraform.Output(t, options, "cluster_arn"),
+				terraform.Output(t, options, "service_arn"),
+				fmt.Sprintf("http://%s", terraform.Output(t, options, "endpoint")),
+				tc.region,
+				tc.expected,
+			)
 		})
 	}
 }
