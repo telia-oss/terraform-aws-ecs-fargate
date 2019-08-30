@@ -1,13 +1,13 @@
 # ----------------------------------------
 # Create a ecs service using fargate
 # ----------------------------------------
-
-provider "aws" {
-  region = "eu-west-1"
+terraform {
+  required_version = ">= 0.12"
 }
 
-resource "aws_ecs_cluster" "cluster" {
-  name = "example-ecs-cluster"
+provider "aws" {
+  version = ">= 2.17"
+  region  = var.region
 }
 
 data "aws_vpc" "main" {
@@ -18,19 +18,20 @@ data "aws_subnet_ids" "main" {
   vpc_id = data.aws_vpc.main.id
 }
 
+
 module "fargate_alb" {
   source  = "telia-oss/loadbalancer/aws"
   version = "3.0.0"
 
-  name_prefix = "example-ecs-cluster"
+  name_prefix = var.name_prefix
   type        = "application"
-  internal    = "false"
+  internal    = false
   vpc_id      = data.aws_vpc.main.id
   subnet_ids  = data.aws_subnet_ids.main.ids
 
   tags = {
-    environment = "test"
-    terraform   = "true"
+    environment = "dev"
+    terraform   = "True"
   }
 }
 
@@ -64,12 +65,17 @@ resource "aws_security_group_rule" "alb_ingress_80" {
   ipv6_cidr_blocks  = ["::/0"]
 }
 
+resource "aws_ecs_cluster" "cluster" {
+  name = "${var.name_prefix}-cluster"
+}
+
 module "fargate" {
   source = "../../"
 
-  name_prefix          = "example-app"
+  name_prefix          = var.name_prefix
   vpc_id               = data.aws_vpc.main.id
   private_subnet_ids   = data.aws_subnet_ids.main.ids
+  lb_arn               = module.fargate_alb.arn
   cluster_id           = aws_ecs_cluster.cluster.id
   task_container_image = "crccheck/hello-world:latest"
 
@@ -85,10 +91,8 @@ module "fargate" {
   }
 
   tags = {
-    environment = "test"
-    terraform   = "true"
+    environment = "dev"
+    terraform   = "True"
   }
-
-  lb_arn = module.fargate_alb.arn
 }
 
