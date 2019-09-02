@@ -1,6 +1,7 @@
 package module
 
 import (
+	"errors"
 	"io/ioutil"
 	"net/http"
 	"strconv"
@@ -10,11 +11,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ecs"
+	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/stretchr/testify/assert"
 )
 
 type Expectations struct {
-	DesiredTaskCount int64
+	DesiredTaskCount int
 	TaskCPU          int
 	TaskMemory       int
 	ContainerImage   string
@@ -33,7 +35,7 @@ func RunTestSuite(t *testing.T, clusterARN, serviceARN, endpoint, region string,
 
 	service = DescribeService(t, sess, clusterARN, serviceARN)
 	assert.Equal(t, "ACTIVE", aws.StringValue(service.Status))
-	assert.Equal(t, expected.DesiredTaskCount, aws.Int64Value(service.DesiredCount))
+	assert.Equal(t, int64(expected.DesiredTaskCount), aws.Int64Value(service.DesiredCount))
 
 	taskDefinition = DescribeTaskDefinition(t, sess, aws.StringValue(service.TaskDefinition))
 	assert.Equal(t, strconv.Itoa(expected.TaskCPU), aws.StringValue(taskDefinition.Cpu))
@@ -44,8 +46,9 @@ func RunTestSuite(t *testing.T, clusterARN, serviceARN, endpoint, region string,
 	assert.Equal(t, expected.ContainerImage, aws.StringValue(containerDefinition.Image))
 
 	WaitForRunningTasks(t, sess, clusterARN, serviceARN, 10*time.Second, 10*time.Minute)
+	WaitForTargetHealth(t, sess, service, expected.DesiredTaskCount, 10*time.Second, 10*time.Minute)
 
-	response := GetServiceEndpoint(t, endpoint)
+	response := HTTPGetRequest(t, endpoint)
 	for _, line := range expected.GetResponse {
 		assert.Contains(t, response, line)
 	}
@@ -122,18 +125,77 @@ WaitLoop:
 	for {
 		select {
 		case <-interval.C:
-			t.Log("waiting for running tasks...")
 			service := DescribeService(t, sess, clusterARN, serviceARN)
 			if aws.Int64Value(service.DesiredCount) == aws.Int64Value(service.RunningCount) {
 				break WaitLoop
 			}
+			t.Log("waiting for running tasks...")
 		case <-timeout.C:
 			t.Fatal("timeout reached while waiting for the desired number of running tasks")
 		}
 	}
 }
 
-func GetServiceEndpoint(t *testing.T, endpoint string) string {
+func waitForTargetHealthE(t *testing.T, sess *session.Session, targetARN string, desiredHealthCount int, checkInterval time.Duration, timeoutLimit time.Duration) error {
+	interval := time.NewTicker(checkInterval)
+	defer interval.Stop()
+
+	timeout := time.NewTimer(timeoutLimit)
+	defer timeout.Stop()
+
+	c := elbv2.New(sess)
+
+	for {
+		select {
+		case <-interval.C:
+			health, err := c.DescribeTargetHealth(&elbv2.DescribeTargetHealthInput{
+				TargetGroupArn: aws.String(targetARN),
+			})
+			if err != nil {
+				return err
+			}
+
+			healthyTargets := 0
+			for _, target := range health.TargetHealthDescriptions {
+				switch aws.StringValue(target.TargetHealth.State) {
+				case elbv2.TargetHealthStateEnumUnused:
+					t.Logf("health checks are disabled for target group: %s", targetARN)
+					return nil
+				case elbv2.TargetHealthStateEnumHealthy:
+					healthyTargets++
+				default:
+				}
+			}
+
+			if healthyTargets == desiredHealthCount {
+				return nil
+			}
+			t.Logf("waiting for health checks (%d/%d)...", healthyTargets, desiredHealthCount)
+		case <-timeout.C:
+			return errors.New("timeout reached while waiting for the desired health count")
+		}
+	}
+}
+
+func WaitForTargetHealth(t *testing.T, sess *session.Session, service *ecs.Service, desiredTaskCount int, checkInterval time.Duration, timeoutLimit time.Duration) {
+	n := len(service.LoadBalancers)
+	errs := make(chan error, n)
+
+	for _, lb := range service.LoadBalancers {
+		go func() {
+			errs <- waitForTargetHealthE(t, sess, aws.StringValue(lb.TargetGroupArn), desiredTaskCount, checkInterval, timeoutLimit)
+		}()
+	}
+
+	for i := 1; i <= n; i++ {
+		err := <-errs
+		if err != nil {
+			t.Error(err)
+		}
+	}
+}
+
+func HTTPGetRequest(t *testing.T, endpoint string) string {
 	r, err := http.Get(endpoint)
 	if err != nil {
 		t.Fatalf("get-request error: %s", err)
