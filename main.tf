@@ -157,7 +157,6 @@ resource "aws_ecs_task_definition" "task" {
     "environment": ${jsonencode(data.null_data_source.task_environment.*.outputs)}
 }]
 EOF
-
 }
 
 resource "aws_ecs_service" "service" {
