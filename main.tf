@@ -114,13 +114,13 @@ resource "aws_lb_target_group" "task" {
 # ------------------------------------------------------------------------------
 # ECS Task/Service
 # ------------------------------------------------------------------------------
-data "null_data_source" "task_environment" {
-  count = var.task_container_environment_count
-
-  inputs = {
-    name  = element(keys(var.task_container_environment), count.index)
-    value = element(values(var.task_container_environment), count.index)
-  }
+locals {
+  task_environment = [
+    for k, v in var.task_container_environment : {
+      name  = k
+      value = v
+    }
+  ]
 }
 
 resource "aws_ecs_task_definition" "task" {
@@ -136,7 +136,11 @@ resource "aws_ecs_task_definition" "task" {
 [{
     "name": "${var.container_name != "" ? var.container_name : var.name_prefix}",
     "image": "${var.task_container_image}",
-    ${local.repository_credentials_rendered}
+    %{if var.repository_credentials != ""~}
+    "repositoryCredentials": {
+        "credentialsParameter": "${var.repository_credentials}"
+    },
+    %{~endif}
     "essential": true,
     "portMappings": [
         {
@@ -154,7 +158,7 @@ resource "aws_ecs_task_definition" "task" {
         }
     },
     "command": ${jsonencode(var.task_container_command)},
-    "environment": ${jsonencode(data.null_data_source.task_environment.*.outputs)}
+    "environment": ${jsonencode(local.task_environment)}
 }]
 EOF
 }

@@ -85,6 +85,10 @@ module "fargate" {
   // port, default protocol is HTTP
   task_container_port = 8000
 
+  task_container_environment = {
+    TEST_VARIABLE = "TEST_VALUE"
+  }
+
   health_check = {
     port = "traffic-port"
     path = "/"

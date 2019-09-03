@@ -27,9 +27,12 @@ func TestModule(t *testing.T) {
 				DesiredTaskCount: 1,
 				TaskCPU:          256,
 				TaskMemory:       512,
-				ContainerImage:   "crccheck/hello-world:latest",
 				NetworkMode:      "awsvpc",
-				GetResponse: []string{
+				ContainerImage:   "crccheck/hello-world:latest",
+				ContainerEnvironment: map[string]string{
+					"TEST_VARIABLE": "TEST_VALUE",
+				},
+				HTTPGetResponse: []string{
 					`Hello World`,
 					`~~~ {~~ ~~~~ ~~~ ~~~~ ~~ ~ /  ===- ~~~`,
 					`\______ o          _,/`,
