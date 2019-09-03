@@ -16,13 +16,15 @@ import (
 )
 
 type Expectations struct {
-	DesiredTaskCount int
-	TaskCPU          int
-	TaskMemory       int
-	ContainerImage   string
-	NetworkMode      string
-	GetResponse      []string
-	Tags             map[string]string
+	DesiredTaskCount      int
+	TaskCPU               int
+	TaskMemory            int
+	NetworkMode           string
+	ContainerImage        string
+	ContainerEnvironment  map[string]string
+	RepositoryCredentials string
+	HTTPGetResponse       []string
+	Tags                  map[string]string
 }
 
 func RunTestSuite(t *testing.T, clusterARN, serviceARN, endpoint, region string, expected Expectations) {
@@ -45,11 +47,25 @@ func RunTestSuite(t *testing.T, clusterARN, serviceARN, endpoint, region string,
 	containerDefinition = GetContainerDefinition(t, taskDefinition)
 	assert.Equal(t, expected.ContainerImage, aws.StringValue(containerDefinition.Image))
 
+	if expected.RepositoryCredentials != "" {
+		if creds := containerDefinition.RepositoryCredentials; assert.NotNil(t, creds) {
+			assert.Equal(t, expected.RepositoryCredentials, creds)
+		}
+	}
+
+	containerEnv := GetContainerEnvironment(containerDefinition)
+	for k, want := range expected.ContainerEnvironment {
+		got, ok := containerEnv[k]
+		if assert.Truef(t, ok, "environment variable exists: %s", k) {
+			assert.Equal(t, want, got)
+		}
+	}
+
 	WaitForRunningTasks(t, sess, clusterARN, serviceARN, 10*time.Second, 10*time.Minute)
 	WaitForTargetHealth(t, sess, service, expected.DesiredTaskCount, 10*time.Second, 10*time.Minute)
 
 	response := HTTPGetRequest(t, endpoint)
-	for _, line := range expected.GetResponse {
+	for _, line := range expected.HTTPGetResponse {
 		assert.Contains(t, response, line)
 	}
 }
@@ -112,6 +128,16 @@ func GetContainerDefinition(t *testing.T, taskDefinition *ecs.TaskDefinition) *e
 		t.Fatalf("task has wrong number of container definitions: %d", n)
 	}
 	return taskDefinition.ContainerDefinitions[0]
+}
+
+func GetContainerEnvironment(def *ecs.ContainerDefinition) map[string]string {
+	vars := make(map[string]string, len(def.Environment))
+
+	for _, kv := range def.Environment {
+		vars[aws.StringValue(kv.Name)] = aws.StringValue(kv.Value)
+	}
+
+	return vars
 }
 
 func WaitForRunningTasks(t *testing.T, sess *session.Session, clusterARN, serviceARN string, checkInterval time.Duration, timeoutLimit time.Duration) {

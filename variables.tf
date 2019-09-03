@@ -84,12 +84,6 @@ variable "task_container_environment" {
   type        = map(string)
 }
 
-variable "task_container_environment_count" {
-  description = "NOTE: This exists purely to calculate count in Terraform. Should equal the length of your environment map."
-  default     = 0
-  type        = number
-}
-
 variable "log_retention_in_days" {
   description = "Number of days the logs will be retained in CloudWatch."
   default     = 30
@@ -142,17 +136,4 @@ variable "repository_credentials_kms_key" {
   default     = "alias/aws/secretsmanager"
   description = "key id, key ARN, alias name or alias ARN of the key that encrypted the repository credentials"
   type        = string
-}
-
-locals {
-  # if the variable is set, create the fragment based on the variable value
-  # if not, just return a empty string to not mess up the json
-  repository_credentials_fragment = <<EOF
-        "repositoryCredentials": {
-            "credentialsParameter": "${var.repository_credentials}"
-        },
-EOF
-
-
-  repository_credentials_rendered = var.repository_credentials == "" ? "" : local.repository_credentials_fragment
 }
