@@ -1,8 +1,9 @@
 version: '2'
 
 env:
-  AWS_DEFAULT_REGION: eu-west-1
+  TERM: screen-256color
   GO111MODULE: on
+  AWS_DEFAULT_REGION: eu-west-1
 
 tasks:
   default:
@@ -10,11 +11,24 @@ tasks:
     - task: test
 
   test:
+    desc: Run tests.
+    cmds:
+    - task: test-go
+    - task: test-terraform
+
+  test-go:
+    desc: Run tests for all Go code.
+    silent: true
+    cmds:
+    - gofmt -s -l -w .
+    - go vet -v ./...
+
+  test-terraform:
     desc: Run tests for all terraform directories.
     silent: true
     env:
       DIRECTORIES:
-        sh: find . -type f -name '*.tf' -not -path "**/.terraform/*" -exec dirname {} \; | sort -u
+        sh: find . -type f -name '*.tf' -not -path "**/.terraform/*" -print0 | xargs -0I {} dirname {} | sort -u
     cmds:
     - |
       BOLD=$(tput bold)
@@ -26,7 +40,7 @@ tasks:
         cd $d
         echo "${BOLD}$PWD:${NORM}"
 
-        if ! terraform fmt -check=true -write=true -list=false -recursive=false; then
+        if ! terraform fmt -check=true -list=false -recursive=false; then
           echo "  ✗ terraform fmt" && exit $?
         else
           echo "  √ terraform fmt"
