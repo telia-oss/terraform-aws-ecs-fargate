@@ -208,6 +208,7 @@ func WaitForTargetHealth(t *testing.T, sess *session.Session, service *ecs.Servi
 	errs := make(chan error, n)
 
 	for _, lb := range service.LoadBalancers {
+		lb := lb
 		go func() {
 			errs <- waitForTargetHealthE(t, sess, aws.StringValue(lb.TargetGroupArn), desiredTaskCount, checkInterval, timeoutLimit)
 		}()

@@ -1,0 +1,20 @@
+name: workflow
+
+on: [push]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: Install Go
+      uses: actions/setup-go@v1
+      with: { go-version: 1.13 }
+    - name: Install Terraform
+      run: |
+        curl -sL https://releases.hashicorp.com/terraform/0.12.8/terraform_0.12.8_linux_amd64.zip -o terraform.zip
+        sudo unzip terraform.zip -d /usr/bin && rm -f terraform.zip
+    - name: Install Taskfile
+      run: curl -sL https://taskfile.dev/install.sh | sh
+    - name: Run tests
+      run: ./bin/task test
