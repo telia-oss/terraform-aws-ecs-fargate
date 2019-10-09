@@ -137,3 +137,9 @@ variable "repository_credentials_kms_key" {
   description = "key id, key ARN, alias name or alias ARN of the key that encrypted the repository credentials"
   type        = string
 }
+
+variable "service_registry_arn" {
+  default     = ""
+  description = "ARN of aws_service_discovery_service resource"
+  type        = string
+}
