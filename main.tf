@@ -192,7 +192,7 @@ resource "aws_ecs_service" "service" {
   }
 
   dynamic "service_registries" {
-    for_each = var.service_registry_arn == null ? [] : [1]
+    for_each = var.service_registry_arn == "" ? [] : [1]
     content {
       registry_arn   = var.service_registry_arn
       container_port = var.task_container_port
