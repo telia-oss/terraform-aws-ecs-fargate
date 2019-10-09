@@ -190,6 +190,17 @@ resource "aws_ecs_service" "service" {
     # The deployment controller type to use. Valid values: CODE_DEPLOY, ECS.
     type = var.deployment_controller_type
   }
+
+  dynamic "service_registries" {
+    for_each = var.service_registry_arn == null ? [] : [1]
+    content {
+      registry_arn   = var.service_registry_arn
+      container_port = var.task_container_port
+      container_name = var.container_name != "" ? var.container_name : var.name_prefix
+    }
+  }
+
+  lifecycle { create_before_destroy = true }
 }
 
 # HACK: The workaround used in ecs/service does not work for some reason in this module, this fixes the following error:
