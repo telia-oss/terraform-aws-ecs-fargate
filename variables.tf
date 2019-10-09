@@ -139,6 +139,7 @@ variable "repository_credentials_kms_key" {
 }
 
 variable "service_registry_arn" {
-  default = null
-  type    = string
+  default     = null
+  description = "ARN of aws_service_discovery_service resource"
+  type        = string
 }
