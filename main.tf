@@ -172,7 +172,7 @@ resource "aws_ecs_service" "service" {
   launch_type                        = "FARGATE"
   deployment_minimum_healthy_percent = var.deployment_minimum_healthy_percent
   deployment_maximum_percent         = var.deployment_maximum_percent
-  health_check_grace_period_seconds  = var.health_check_grace_period_seconds
+  health_check_grace_period_seconds  = var.lb_arn == "" ? null : var.health_check_grace_period_seconds
 
   network_configuration {
     subnets          = var.private_subnet_ids
@@ -180,10 +180,15 @@ resource "aws_ecs_service" "service" {
     assign_public_ip = var.task_container_assign_public_ip
   }
 
-  load_balancer {
-    container_name   = var.container_name != "" ? var.container_name : var.name_prefix
-    container_port   = var.task_container_port
-    target_group_arn = aws_lb_target_group.task.arn
+  dynamic "load_balancers" {
+    for_each = var.lb_arn == "" ? [] : [1]
+    content {
+      load_balancer {
+        container_name   = var.container_name != "" ? var.container_name : var.name_prefix
+        container_port   = var.task_container_port
+        target_group_arn = aws_lb_target_group.task.arn
+      }
+    }
   }
 
   deployment_controller {
@@ -204,10 +209,8 @@ resource "aws_ecs_service" "service" {
 # HACK: The workaround used in ecs/service does not work for some reason in this module, this fixes the following error:
 # "The target group with targetGroupArn arn:aws:elasticloadbalancing:... does not have an associated load balancer."
 # see https://github.com/hashicorp/terraform/issues/12634.
+#     https://github.com/terraform-providers/terraform-provider-aws/issues/3495
 # Service depends on this resources which prevents it from being created until the LB is ready
 resource "null_resource" "lb_exists" {
-  triggers = {
-    alb_name = var.lb_arn
-  }
+  triggers = var.lb_arn == "" ? {} : { alb_name = var.lb_arn }
 }
-
