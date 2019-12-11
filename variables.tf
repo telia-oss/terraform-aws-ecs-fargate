@@ -32,11 +32,6 @@ variable "task_container_image" {
   type        = string
 }
 
-variable "lb_arn" {
-  description = "Arn for the LB for which the service should be attach to."
-  type        = string
-}
-
 variable "desired_count" {
   description = "The number of instances of the task definitions to place and keep running."
   default     = 1
@@ -142,4 +137,9 @@ variable "service_registry_arn" {
   default     = ""
   description = "ARN of aws_service_discovery_service resource"
   type        = string
+}
+
+variable "stop_timeout" {
+  description = "Time duration (in seconds) to wait before the container is forcefully killed if it doesn't exit normally on its own. On Fargate the maximum value is 120 seconds."
+  default     = 30
 }

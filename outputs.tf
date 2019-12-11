@@ -6,16 +6,6 @@ output "service_arn" {
   value       = aws_ecs_service.service.id
 }
 
-output "target_group_arn" {
-  description = "The ARN of the Target Group."
-  value       = aws_lb_target_group.task.arn
-}
-
-output "target_group_name" {
-  description = "The Name of the Target Group."
-  value       = aws_lb_target_group.task.name
-}
-
 output "task_role_arn" {
   description = "The Amazon Resource Name (ARN) specifying the service role."
   value       = aws_iam_role.task.arn

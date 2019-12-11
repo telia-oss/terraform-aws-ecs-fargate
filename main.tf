@@ -74,44 +74,6 @@ resource "aws_security_group_rule" "egress_service" {
 }
 
 # ------------------------------------------------------------------------------
-# LB Target group
-# ------------------------------------------------------------------------------
-resource "aws_lb_target_group" "task" {
-  vpc_id      = var.vpc_id
-  protocol    = var.task_container_protocol
-  port        = var.task_container_port
-  target_type = "ip"
-  dynamic "health_check" {
-    for_each = [var.health_check]
-    content {
-      enabled             = lookup(health_check.value, "enabled", null)
-      healthy_threshold   = lookup(health_check.value, "healthy_threshold", null)
-      interval            = lookup(health_check.value, "interval", null)
-      matcher             = lookup(health_check.value, "matcher", null)
-      path                = lookup(health_check.value, "path", null)
-      port                = lookup(health_check.value, "port", null)
-      protocol            = lookup(health_check.value, "protocol", null)
-      timeout             = lookup(health_check.value, "timeout", null)
-      unhealthy_threshold = lookup(health_check.value, "unhealthy_threshold", null)
-    }
-  }
-
-  # NOTE: TF is unable to destroy a target group while a listener is attached,
-  # therefor we have to create a new one before destroying the old. This also means
-  # we have to let it have a random name, and then tag it with the desired name.
-  lifecycle {
-    create_before_destroy = true
-  }
-
-  tags = merge(
-    var.tags,
-    {
-      Name = "${var.name_prefix}-target-${var.task_container_port}"
-    },
-  )
-}
-
-# ------------------------------------------------------------------------------
 # ECS Task/Service
 # ------------------------------------------------------------------------------
 locals {
@@ -157,6 +119,7 @@ resource "aws_ecs_task_definition" "task" {
             "awslogs-stream-prefix": "container"
         }
     },
+    "stopTimeout": ${var.stop_timeout},
     "command": ${jsonencode(var.task_container_command)},
     "environment": ${jsonencode(local.task_environment)}
 }]
@@ -164,7 +127,6 @@ EOF
 }
 
 resource "aws_ecs_service" "service" {
-  depends_on                         = [null_resource.lb_exists]
   name                               = var.name_prefix
   cluster                            = var.cluster_id
   task_definition                    = aws_ecs_task_definition.task.arn
@@ -172,18 +134,11 @@ resource "aws_ecs_service" "service" {
   launch_type                        = "FARGATE"
   deployment_minimum_healthy_percent = var.deployment_minimum_healthy_percent
   deployment_maximum_percent         = var.deployment_maximum_percent
-  health_check_grace_period_seconds  = var.health_check_grace_period_seconds
 
   network_configuration {
     subnets          = var.private_subnet_ids
     security_groups  = [aws_security_group.ecs_service.id]
     assign_public_ip = var.task_container_assign_public_ip
-  }
-
-  load_balancer {
-    container_name   = var.container_name != "" ? var.container_name : var.name_prefix
-    container_port   = var.task_container_port
-    target_group_arn = aws_lb_target_group.task.arn
   }
 
   deployment_controller {
@@ -198,16 +153,6 @@ resource "aws_ecs_service" "service" {
       container_port = var.task_container_port
       container_name = var.container_name != "" ? var.container_name : var.name_prefix
     }
-  }
-}
-
-# HACK: The workaround used in ecs/service does not work for some reason in this module, this fixes the following error:
-# "The target group with targetGroupArn arn:aws:elasticloadbalancing:... does not have an associated load balancer."
-# see https://github.com/hashicorp/terraform/issues/12634.
-# Service depends on this resources which prevents it from being created until the LB is ready
-resource "null_resource" "lb_exists" {
-  triggers = {
-    alb_name = var.lb_arn
   }
 }
 
