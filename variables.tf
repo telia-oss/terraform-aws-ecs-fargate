@@ -144,3 +144,8 @@ variable "service_registry_arn" {
   description = "ARN of aws_service_discovery_service resource"
   type        = string
 }
+
+variable "stop_timeout" {
+  description = "Time duration (in seconds) to wait before the container is forcefully killed if it doesn't exit normally on its own. On Fargate the maximum value is 120 seconds."
+  default     = 30
+}
