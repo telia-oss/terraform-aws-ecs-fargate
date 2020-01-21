@@ -50,16 +50,28 @@ variable "task_container_assign_public_ip" {
   type        = bool
 }
 
-variable "task_container_port" {
-  description = "Port that the container exposes."
-  type        = number
+# variable "task_container_port" {
+#   description = "Port that the container exposes."
+#   type        = number
+# }
+
+variable "task_container_port_protocol" {
+  description = "The port and protocol mapping passed to a container. Empty list is NOT allowed"
+  type = list(object({
+    containerPort = number
+    hostPort = number
+    protocol = string # The protocol the load balancer uses when routing traffic to the targets. Should be one of TCP/TLS/UDP/TCP_UDP/HTTP/HTTPS
+    health_check_path = string
+    health_check_matcher = string
+    health_check_timeout = number
+  }))
 }
 
-variable "task_container_protocol" {
-  description = "Protocol that the container exposes."
-  default     = "HTTP"
-  type        = string
-}
+# variable "task_container_protocol" {
+#   description = "Protocol that the container exposes."
+#   default     = "HTTP"
+#   type        = string
+# }
 
 variable "task_definition_cpu" {
   description = "Amount of CPU to reserve for the task."
@@ -91,10 +103,10 @@ variable "log_retention_in_days" {
   type        = number
 }
 
-variable "health_check" {
-  description = "A health block containing health check settings for the target group. Overrides the defaults."
-  type        = map(string)
-}
+# variable "health_check" {
+#   description = "A health block containing health check settings for the target group. Overrides the defaults."
+#   type        = map(string)
+# }
 
 variable "health_check_grace_period_seconds" {
   default     = 300

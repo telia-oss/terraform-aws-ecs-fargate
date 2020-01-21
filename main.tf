@@ -77,23 +77,24 @@ resource "aws_security_group_rule" "egress_service" {
 # LB Target group
 # ------------------------------------------------------------------------------
 resource "aws_lb_target_group" "task" {
+
+  count = length(var.task_container_port_protocol)
+
   vpc_id      = var.vpc_id
-  protocol    = var.task_container_protocol
-  port        = var.task_container_port
+  protocol    = var.task_container_port_protocol[count.index].protocol
+  port        = var.task_container_port_protocol[count.index].containerPort
   target_type = "ip"
-  dynamic "health_check" {
-    for_each = [var.health_check]
-    content {
-      enabled             = lookup(health_check.value, "enabled", null)
-      healthy_threshold   = lookup(health_check.value, "healthy_threshold", null)
-      interval            = lookup(health_check.value, "interval", null)
-      matcher             = lookup(health_check.value, "matcher", null)
-      path                = lookup(health_check.value, "path", null)
-      port                = lookup(health_check.value, "port", null)
-      protocol            = lookup(health_check.value, "protocol", null)
-      timeout             = lookup(health_check.value, "timeout", null)
-      unhealthy_threshold = lookup(health_check.value, "unhealthy_threshold", null)
-    }
+
+  # Note: The Health Check parameters you can set vary by the protocol of the Target Group
+  health_check {
+    healthy_threshold   = 2
+    unhealthy_threshold = 2
+    interval            = 5
+    timeout             = var.task_container_port_protocol[count.index].health_check_timeout
+    path                = var.task_container_port_protocol[count.index].health_check_path
+    port                = var.task_container_port_protocol[count.index].containerPort
+    protocol            = var.task_container_port_protocol[count.index].protocol
+    matcher             = var.task_container_port_protocol[count.index].health_check_matcher
   }
 
   # NOTE: TF is unable to destroy a target group while a listener is attached,
@@ -106,7 +107,7 @@ resource "aws_lb_target_group" "task" {
   tags = merge(
     var.tags,
     {
-      Name = "${var.name_prefix}-target-${var.task_container_port}"
+      Name = "${var.name_prefix}-target-${var.task_container_port_protocol[count.index].containerPort}"
     },
   )
 }
@@ -119,6 +120,16 @@ locals {
     for k, v in var.task_container_environment : {
       name  = k
       value = v
+    }
+  ]
+}
+
+locals {
+  container_port_protocol_mapping = [
+    for o in var.task_container_port_protocol : {
+      containerPort  = o.containerPort
+      hostPort = o.hostPort
+      protocol = "tcp"
     }
   ]
 }
@@ -142,13 +153,7 @@ resource "aws_ecs_task_definition" "task" {
     },
     %{~endif}
     "essential": true,
-    "portMappings": [
-        {
-            "containerPort": ${var.task_container_port},
-            "hostPort": ${var.task_container_port},
-            "protocol":"tcp"
-        }
-    ],
+    "portMappings": ${jsonencode(local.container_port_protocol_mapping)},
     "logConfiguration": {
         "logDriver": "awslogs",
         "options": {
@@ -182,11 +187,12 @@ resource "aws_ecs_service" "service" {
   }
 
   dynamic "load_balancer" {
-    for_each = var.lb_arn == "" ? [] : [1]
+    for_each = var.lb_arn == "" ? [] : aws_lb_target_group.task
+
     content {
       container_name   = var.container_name != "" ? var.container_name : var.name_prefix
-      container_port   = var.task_container_port
-      target_group_arn = aws_lb_target_group.task.arn
+      container_port   = load_balancer.value.port
+      target_group_arn = load_balancer.value.arn
     }
   }
 
@@ -196,10 +202,10 @@ resource "aws_ecs_service" "service" {
   }
 
   dynamic "service_registries" {
-    for_each = var.service_registry_arn == "" ? [] : [1]
+    for_each = var.service_registry_arn == "" ? [] : aws_lb_target_group.task
     content {
       registry_arn   = var.service_registry_arn
-      container_port = var.task_container_port
+      container_port = service_registries.value.port
       container_name = var.container_name != "" ? var.container_name : var.name_prefix
     }
   }
