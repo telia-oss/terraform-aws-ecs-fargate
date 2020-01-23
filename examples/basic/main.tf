@@ -41,18 +41,9 @@ resource "aws_lb_listener" "alb" {
   protocol          = "HTTP"
 
   default_action {
-    target_group_arn = module.fargate.target_group_arn
+    target_group_arn = lookup(module.fargate.target_groups, 8000, "") # reference target group created by Fargate module
     type             = "forward"
   }
-}
-
-resource "aws_security_group_rule" "task_ingress_8000" {
-  security_group_id        = module.fargate.service_sg_id
-  type                     = "ingress"
-  protocol                 = "tcp"
-  from_port                = 8000
-  to_port                  = 8000
-  source_security_group_id = module.fargate_alb.security_group_id
 }
 
 resource "aws_security_group_rule" "alb_ingress_80" {
@@ -63,6 +54,15 @@ resource "aws_security_group_rule" "alb_ingress_80" {
   to_port           = 80
   cidr_blocks       = ["0.0.0.0/0"]
   ipv6_cidr_blocks  = ["::/0"]
+}
+
+resource "aws_security_group_rule" "task_ingress_8000" {
+  security_group_id        = module.fargate.service_sg_id
+  type                     = "ingress"
+  protocol                 = "tcp"
+  from_port                = 8000
+  to_port                  = 8000
+  source_security_group_id = module.fargate_alb.security_group_id
 }
 
 resource "aws_ecs_cluster" "cluster" {
@@ -82,16 +82,23 @@ module "fargate" {
   // public ip is needed for default vpc, default is false
   task_container_assign_public_ip = true
 
-  // port, default protocol is HTTP
-  task_container_port = 8000
+  # Specify configration map for port, protocol used by targe group and container with health check on it
+  task_container_port_protocol = {
+    "8000" = {
+      containerPort        = 8000
+      hostPort             = 8000
+      protocol             = "HTTP"
+      health_check_path    = "/"
+      health_check_matcher = "200"
+      health_check_timeout = 4
+      healthy_threshold    = 2
+      unhealthy_threshold  = 2
+      interval             = 5
+    },
+  }
 
   task_container_environment = {
     TEST_VARIABLE = "TEST_VALUE"
-  }
-
-  health_check = {
-    port = "traffic-port"
-    path = "/"
   }
 
   tags = {
