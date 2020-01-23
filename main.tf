@@ -78,23 +78,23 @@ resource "aws_security_group_rule" "egress_service" {
 # ------------------------------------------------------------------------------
 resource "aws_lb_target_group" "task" {
 
-  count = length(var.task_container_port_protocol)
+  for_each = var.task_container_port_protocol
 
   vpc_id      = var.vpc_id
-  protocol    = var.task_container_port_protocol[count.index].protocol
-  port        = var.task_container_port_protocol[count.index].containerPort
+  protocol    = each.value.protocol
+  port        = each.value.containerPort
   target_type = "ip"
 
   # Note: The Health Check parameters you can set vary by the protocol of the Target Group
   health_check {
-    healthy_threshold   = 2
-    unhealthy_threshold = 2
-    interval            = 5
-    timeout             = var.task_container_port_protocol[count.index].health_check_timeout
-    path                = var.task_container_port_protocol[count.index].health_check_path
-    port                = var.task_container_port_protocol[count.index].containerPort
-    protocol            = var.task_container_port_protocol[count.index].protocol
-    matcher             = var.task_container_port_protocol[count.index].health_check_matcher
+    healthy_threshold   = each.value.healthy_threshold
+    unhealthy_threshold = each.value.unhealthy_threshold
+    interval            = each.value.interval
+    timeout             = each.value.health_check_timeout
+    path                = each.value.health_check_path
+    port                = each.value.containerPort
+    protocol            = each.value.protocol
+    matcher             = each.value.health_check_matcher
   }
 
   # NOTE: TF is unable to destroy a target group while a listener is attached,
@@ -107,7 +107,7 @@ resource "aws_lb_target_group" "task" {
   tags = merge(
     var.tags,
     {
-      Name = "${var.name_prefix}-target-${var.task_container_port_protocol[count.index].containerPort}"
+      Name = "${var.name_prefix}-target-${each.value.containerPort}"
     },
   )
 }
@@ -127,9 +127,9 @@ locals {
 locals {
   container_port_protocol_mapping = [
     for o in var.task_container_port_protocol : {
-      containerPort  = o.containerPort
-      hostPort = o.hostPort
-      protocol = "tcp"
+      containerPort = o.containerPort
+      hostPort      = o.hostPort
+      protocol      = "tcp"
     }
   ]
 }
@@ -186,8 +186,9 @@ resource "aws_ecs_service" "service" {
     assign_public_ip = var.task_container_assign_public_ip
   }
 
+  # Assoicate target groups to ECS service in order to used by load balancer
   dynamic "load_balancer" {
-    for_each = var.lb_arn == "" ? [] : aws_lb_target_group.task
+    for_each = var.lb_arn == "" ? {} : aws_lb_target_group.task
 
     content {
       container_name   = var.container_name != "" ? var.container_name : var.name_prefix
@@ -202,7 +203,7 @@ resource "aws_ecs_service" "service" {
   }
 
   dynamic "service_registries" {
-    for_each = var.service_registry_arn == "" ? [] : aws_lb_target_group.task
+    for_each = var.service_registry_arn == "" ? {} : aws_lb_target_group.task
     content {
       registry_arn   = var.service_registry_arn
       container_port = service_registries.value.port

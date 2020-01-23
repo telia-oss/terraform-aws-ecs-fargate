@@ -6,19 +6,9 @@ output "service_arn" {
   value       = aws_ecs_service.service.id
 }
 
-# output "target_group_arn" {
-#   description = "The ARN of the Target Group."
-#   value       = aws_lb_target_group.task.arn
-# }
-
-# output "target_group_name" {
-#   description = "The Name of the Target Group."
-#   value       = aws_lb_target_group.task.name
-# }
-
 output "target_groups" {
   description = "All Target Groups."
-  value = zipmap(aws_lb_target_group.task.*.port, aws_lb_target_group.task.*.arn)
+  value       = zipmap(values(aws_lb_target_group.task)[*]["port"], values(aws_lb_target_group.task)[*]["arn"])
 }
 
 output "task_role_arn" {
