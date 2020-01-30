@@ -6,6 +6,11 @@ output "service_arn" {
   value       = aws_ecs_service.service.id
 }
 
+output "service_name" {
+  description = "The name of the service"
+  value       = aws_ecs_service.service.name
+}
+
 output "target_group_arn" {
   description = "The ARN of the Target Group."
   value       = aws_lb_target_group.task.arn
