@@ -41,19 +41,19 @@ tasks:
         echo "${BOLD}$PWD:${NORM}"
 
         if ! terraform fmt -check=true -list=false -recursive=false; then
-          echo "  ✗ terraform fmt" && exit $?
+          echo "  ✗ terraform fmt" && exit 1
         else
           echo "  √ terraform fmt"
         fi
 
         if ! terraform init -backend=false -input=false -get=true -get-plugins=true -no-color > /dev/null; then
-          echo "  ✗ terraform init" && exit $?
+          echo "  ✗ terraform init" && exit 1
         else
           echo "  √ terraform init"
         fi
 
         if ! terraform validate > /dev/null; then
-          echo "  ✗ terraform validate" && exit $?
+          echo "  ✗ terraform validate" && exit 1
         else
           echo "  √ terraform validate"
         fi
