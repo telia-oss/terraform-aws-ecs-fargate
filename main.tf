@@ -141,6 +141,9 @@ resource "aws_ecs_task_definition" "task" {
         "credentialsParameter": "${var.repository_credentials}"
     },
     %{~endif}
+    %{if length(var.task_secrets) > 0~}
+    "secrets": ${jsonencode(var.task_secrets)},
+    %{~endif}
     "essential": true,
     "portMappings": [
         {

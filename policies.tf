@@ -67,3 +67,29 @@ data "aws_iam_policy_document" "read_repository_credentials" {
   }
 }
 
+data "aws_kms_key" "task_secrets_key" {
+  key_id = var.task_secrets_kms_key
+}
+
+data "aws_iam_policy_document" "task_secrets" {
+  statement {
+    effect = "Allow"
+
+    resources = concat(
+      [data.aws_kms_key.task_secrets_key.arn],
+      [for i in var.task_secrets : i["valueFrom"]]
+    )
+    actions = [
+      "secretsmanager:GetSecretValue",
+      "kms:Decrypt",
+    ]
+  }
+}
+
+resource "aws_iam_role_policy" "read_task_secret_key" {
+  name   = "${var.name_prefix}-read-task-secrets-key"
+  role   = aws_iam_role.task.id
+  policy = data.aws_iam_policy_document.task_secrets.json
+}
+
+

@@ -12,6 +12,17 @@ variable "container_name" {
   type        = string
 }
 
+variable "task_secrets" {
+  type    = list(object({ name = string, valueFrom = string }))
+  default = []
+}
+
+variable "task_secrets_kms_key" {
+  type        = string
+  description = ""
+  default     = "alias/aws/secretsmanager"
+}
+
 variable "vpc_id" {
   description = "The VPC ID."
   type        = string
@@ -132,6 +143,7 @@ variable "repository_credentials" {
   description = "name or ARN of a secrets manager secret (arn:aws:secretsmanager:region:aws_account_id:secret:secret_name)"
   type        = string
 }
+
 
 variable "repository_credentials_kms_key" {
   default     = "alias/aws/secretsmanager"
