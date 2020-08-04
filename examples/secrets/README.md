@@ -1,3 +1,3 @@
-## examples/basic
+## examples/secrets
 
-An example which shows _basic_ usage of the module.
+An example which shows how to inject secrets with of the module.

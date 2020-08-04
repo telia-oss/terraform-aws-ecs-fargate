@@ -86,10 +86,3 @@ data "aws_iam_policy_document" "task_secrets" {
   }
 }
 
-resource "aws_iam_role_policy" "read_task_secret_key" {
-  name   = "${var.name_prefix}-read-task-secrets-key"
-  role   = aws_iam_role.execution.id
-  policy = data.aws_iam_policy_document.task_secrets.json
-}
-
-

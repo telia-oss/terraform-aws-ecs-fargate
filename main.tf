@@ -33,6 +33,12 @@ resource "aws_iam_role_policy" "read_repository_credentials" {
   policy = data.aws_iam_policy_document.read_repository_credentials.json
 }
 
+resource "aws_iam_role_policy" "read_task_secret_key" {
+  name   = "${var.name_prefix}-read-task-secrets-key"
+  role   = aws_iam_role.execution.id
+  policy = data.aws_iam_policy_document.task_secrets.json
+}
+
 # ------------------------------------------------------------------------------
 # IAM - Task role, basic. Users of the module will append policies to this role
 # when they use the module. S3, Dynamo permissions etc etc.
