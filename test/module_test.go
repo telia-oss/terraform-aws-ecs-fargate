@@ -39,6 +39,27 @@ func TestModule(t *testing.T) {
 				},
 			},
 		},
+		{
+			description: "task secrets example",
+			directory:   "../examples/secrets",
+			name:        fmt.Sprintf("fargate-secrets-test-%s", random.UniqueId()),
+			region:      "eu-west-1",
+			expected: ecs.Expectations{
+				DesiredTaskCount: 1,
+				TaskCPU:          256,
+				TaskMemory:       512,
+				NetworkMode:      "awsvpc",
+				ContainerImage:   "crccheck/hello-world:latest",
+				ContainerEnvironment: map[string]string{
+					"TEST_VARIABLE": "TEST_VALUE",
+				},
+				HTTPGetResponse: []string{
+					`Hello World`,
+					`~~~ {~~ ~~~~ ~~~ ~~~~ ~~ ~ /  ===- ~~~`,
+					`\______ o          _,/`,
+				},
+			},
+		},
 	}
 
 	for _, tc := range tests {
