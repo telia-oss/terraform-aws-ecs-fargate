@@ -8,7 +8,7 @@ variable "region" {
   default = "eu-west-1"
 }
 
-variable "task_secrets_kms_key" {
+variable "task_container_secrets_kms_key" {
   type        = string
   description = ""
   default     = "alias/aws/secretsmanager"

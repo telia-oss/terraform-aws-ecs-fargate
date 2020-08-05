@@ -33,10 +33,10 @@ resource "aws_iam_role_policy" "read_repository_credentials" {
   policy = data.aws_iam_policy_document.read_repository_credentials.json
 }
 
-resource "aws_iam_role_policy" "read_task_secret_key" {
-  name   = "${var.name_prefix}-read-task-secrets-key"
+resource "aws_iam_role_policy" "read_task_container_secrets" {
+  name   = "${var.name_prefix}-read-task-container-secrets"
   role   = aws_iam_role.execution.id
-  policy = data.aws_iam_policy_document.task_secrets.json
+  policy = data.aws_iam_policy_document.task_container_secrets.json
 }
 
 # ------------------------------------------------------------------------------
@@ -147,8 +147,8 @@ resource "aws_ecs_task_definition" "task" {
         "credentialsParameter": "${var.repository_credentials}"
     },
     %{~endif}
-    %{if length(var.task_secrets) > 0~}
-    "secrets": ${jsonencode(var.task_secrets)},
+    %{if length(var.task_container_secrets) > 0~}
+    "secrets": ${jsonencode(var.task_container_secrets)},
     %{~endif}
     "essential": true,
     "portMappings": [

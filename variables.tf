@@ -12,12 +12,12 @@ variable "container_name" {
   type        = string
 }
 
-variable "task_secrets" {
+variable "task_container_secrets" {
   type    = list(object({ name = string, valueFrom = string }))
   default = []
 }
 
-variable "task_secrets_kms_key" {
+variable "task_container_secrets_kms_key" {
   type        = string
   description = ""
   default     = "alias/aws/secretsmanager"

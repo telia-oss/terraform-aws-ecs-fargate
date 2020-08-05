@@ -69,22 +69,22 @@ resource "aws_ecs_cluster" "cluster" {
   name = "${var.name_prefix}-cluster"
 }
 
-resource "aws_secretsmanager_secret" "task_secrets" {
+resource "aws_secretsmanager_secret" "task_container_secrets" {
   name       = var.name_prefix
-  kms_key_id = var.task_secrets_kms_key
+  kms_key_id = var.task_container_secrets_kms_key
 }
 
-resource "aws_secretsmanager_secret_version" "task_secrets" {
-  secret_id     = aws_secretsmanager_secret.task_secrets.id
+resource "aws_secretsmanager_secret_version" "task_container_secrets" {
+  secret_id     = aws_secretsmanager_secret.task_container_secrets.id
   secret_string = "Super secret and important string"
 }
 
-data "aws_secretsmanager_secret" "task_secrets" {
-  arn = aws_secretsmanager_secret.task_secrets.arn
+data "aws_secretsmanager_secret" "task_container_secrets" {
+  arn = aws_secretsmanager_secret.task_container_secrets.arn
 }
 
-data "aws_kms_key" "task_secrets" {
-  key_id = data.aws_secretsmanager_secret.task_secrets.kms_key_id
+data "aws_kms_key" "task_container_secrets" {
+  key_id = data.aws_secretsmanager_secret.task_container_secrets.kms_key_id
 }
 
 module "fargate" {
@@ -107,12 +107,12 @@ module "fargate" {
     TEST_VARIABLE = "TEST_VALUE"
   }
 
-  task_secrets_kms_key = data.aws_kms_key.task_secrets.key_id
+  task_container_secrets_kms_key = data.aws_kms_key.task_container_secrets.key_id
 
-  task_secrets = [
+  task_container_secrets = [
     {
       name      = "TASK_SECRET"
-      valueFrom = aws_secretsmanager_secret_version.task_secrets.arn
+      valueFrom = aws_secretsmanager_secret_version.task_container_secrets.arn
     }
   ]
 
@@ -126,4 +126,3 @@ module "fargate" {
     terraform   = "True"
   }
 }
-
