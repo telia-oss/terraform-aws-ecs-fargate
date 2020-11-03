@@ -208,7 +208,6 @@ resource "aws_ecs_service" "service" {
     for_each = var.service_registry_arn == "" ? [] : [1]
     content {
       registry_arn   = var.service_registry_arn
-      container_port = var.task_container_port
       container_name = var.container_name != "" ? var.container_name : var.name_prefix
     }
   }
