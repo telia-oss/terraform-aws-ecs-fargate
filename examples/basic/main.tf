@@ -74,6 +74,7 @@ module "fargate" {
 
   name_prefix          = var.name_prefix
   vpc_id               = data.aws_vpc.main.id
+  vpc_cidr_block       = data.aws_vpc.main.cidr_block
   private_subnet_ids   = data.aws_subnet_ids.main.ids
   lb_arn               = module.fargate_alb.arn
   cluster_id           = aws_ecs_cluster.cluster.id
