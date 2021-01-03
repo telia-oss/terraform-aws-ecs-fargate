@@ -148,10 +148,11 @@ resource "aws_ecs_task_definition" "task" {
   task_role_arn            = aws_iam_role.task.arn
 
   volume {
-    name = (var.create_efs_vol == true ? "${var.name_prefix}-service-storage" : null_resource.fs.id)
+    count = (var.create_efs_vol == true ? 1 : 0)
+    name = (var.create_efs_vol == true ? "${var.name_prefix}-service-storage" : "")
 
     efs_volume_configuration {
-      file_system_id = (var.create_efs_vol == true ? aws_efs_file_system.fs[0].id : null_resource.fs.id)
+      file_system_id = (var.create_efs_vol == true ? aws_efs_file_system.fs[0].id : "")
       root_directory = (var.create_efs_vol == true ? "/opt/data" : "" )
     }
   }
@@ -240,6 +241,3 @@ resource "aws_ecs_service" "service" {
 resource "null_resource" "lb_exists" {
   triggers = var.lb_arn == "" ? {} : { alb_name = var.lb_arn }
 }
-
-
-resource "null_resource" "fs" {}
