@@ -147,8 +147,8 @@ resource "aws_ecs_task_definition" "task" {
   memory                   = var.task_definition_memory
   task_role_arn            = aws_iam_role.task.arn
 
-  volume {
-    count = (var.create_efs_vol == true ? 1 : 0)
+  dynamic "volume" {
+    for_each = aws_efs_file_system.fs[*].id
     name = (var.create_efs_vol == true ? "${var.name_prefix}-service-storage" : "")
 
     efs_volume_configuration {
