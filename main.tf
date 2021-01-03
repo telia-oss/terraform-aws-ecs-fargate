@@ -139,8 +139,12 @@ resource "aws_ecs_task_definition" "task" {
   task_role_arn            = aws_iam_role.task.arn
 
   volume {
-    file_system_id = (var.create_efs_vol == true ? aws_efs_file_system.fs.id : "")
-    root_directory = (var.create_efs_vol == true ? "/opt/data" : "" )
+    name = (var.create_efs_vol == true ? "${var.name_prefix}-service-storage" : "")
+
+    efs_volume_configuration {
+      file_system_id = (var.create_efs_vol == true ? aws_efs_file_system.fs.id : "")
+      root_directory = (var.create_efs_vol == true ? "/opt/data" : "" )
+    }
   }
 
   container_definitions = <<EOF
