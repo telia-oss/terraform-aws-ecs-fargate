@@ -161,3 +161,9 @@ variable "stop_timeout" {
   description = "Time duration (in seconds) to wait before the container is forcefully killed if it doesn't exit normally on its own. On Fargate the maximum value is 120 seconds."
   default     = 30
 }
+
+
+variable "create_efs_vol" {
+  description = "Create an EFS Volume and mount it to /opt/data"
+  default = false
+}
