@@ -151,7 +151,7 @@ resource "aws_ecs_task_definition" "task" {
     name = (var.create_efs_vol == true ? "${var.name_prefix}-service-storage" : "")
 
     efs_volume_configuration {
-      file_system_id = (var.create_efs_vol == true ? aws_efs_file_system.fs[1].id : "")
+      file_system_id = (var.create_efs_vol == true ? aws_efs_file_system.fs[0].id : "")
       root_directory = (var.create_efs_vol == true ? "/opt/data" : "" )
     }
   }
