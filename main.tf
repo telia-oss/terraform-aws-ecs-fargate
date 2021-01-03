@@ -129,6 +129,15 @@ locals {
   ]
 }
 
+resource "aws_efs_file_system" "fs" {
+  count = (var.create_efs_vol == true ? 1 : 0)
+  creation_token = "${var.name_prefix}-service-storage"
+
+  lifecycle_policy {
+    transition_to_ia = "AFTER_30_DAYS"
+  }
+}
+
 resource "aws_ecs_task_definition" "task" {
   family                   = var.name_prefix
   execution_role_arn       = aws_iam_role.execution.arn
