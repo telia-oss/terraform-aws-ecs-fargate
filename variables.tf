@@ -144,7 +144,6 @@ variable "repository_credentials" {
   type        = string
 }
 
-
 variable "repository_credentials_kms_key" {
   default     = "alias/aws/secretsmanager"
   description = "key id, key ARN, alias name or alias ARN of the key that encrypted the repository credentials"
@@ -155,6 +154,12 @@ variable "service_registry_arn" {
   default     = ""
   description = "ARN of aws_service_discovery_service resource"
   type        = string
+}
+
+variable "service_discovery_srv_record" {
+  default     = true
+  type        = bool
+  description = "Set to false if you specify a SRV DNS record in aws_service_discovery_service. If only A record, set this to false."
 }
 
 variable "stop_timeout" {
