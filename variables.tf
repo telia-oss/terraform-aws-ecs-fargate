@@ -165,5 +165,5 @@ variable "stop_timeout" {
 
 variable "create_efs_vol" {
   description = "Create an EFS Volume and mount it to /opt/data"
-  default = false
+  default     = false
 }

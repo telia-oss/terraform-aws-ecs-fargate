@@ -130,7 +130,7 @@ locals {
 }
 
 resource "aws_efs_file_system" "fs" {
-  count = (var.create_efs_vol == true ? 1 : 0)
+  count          = (var.create_efs_vol == true ? 1 : 0)
   creation_token = "${var.name_prefix}-service-storage"
 
   lifecycle_policy {
@@ -151,13 +151,13 @@ resource "aws_ecs_task_definition" "task" {
     for_each = aws_efs_file_system.fs[*].id
     content {
       name = (var.create_efs_vol == true ? "${var.name_prefix}-service-storage" : "")
-      
+
       efs_volume_configuration {
         file_system_id = (var.create_efs_vol == true ? aws_efs_file_system.fs[0].id : "")
-        root_directory = (var.create_efs_vol == true ? "/opt/data" : "" )
+        root_directory = (var.create_efs_vol == true ? "/opt/data" : "")
       }
     }
-    
+
   }
 
   container_definitions = <<EOF
@@ -205,6 +205,7 @@ resource "aws_ecs_service" "service" {
   deployment_minimum_healthy_percent = var.deployment_minimum_healthy_percent
   deployment_maximum_percent         = var.deployment_maximum_percent
   health_check_grace_period_seconds  = var.lb_arn == "" ? null : var.health_check_grace_period_seconds
+  platform_version                   = (var.create_efs_vol == true ? "1.4.0" : "LATEST")
 
   network_configuration {
     subnets          = var.private_subnet_ids
@@ -229,7 +230,7 @@ resource "aws_ecs_service" "service" {
   dynamic "service_registries" {
     for_each = var.service_registry_arn == "" ? [] : [1]
     content {
-      registry_arn   = var.service_registry_arn
+      registry_arn = var.service_registry_arn
       // container_port = var.task_container_port
       container_name = var.container_name != "" ? var.container_name : var.name_prefix
     }
