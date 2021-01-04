@@ -196,7 +196,7 @@ resource "aws_ecs_task_definition" "task" {
   task_role_arn            = aws_iam_role.task.arn
 
   dynamic "volume" {
-    for_each = (length(local.dyn_vols_to_create > 0 ? local.dyn_vols_to_create : [] )
+    for_each = (length(local.dyn_vols_to_create > 0 ? local.dyn_vols_to_create : [] ))
     content {
       name = "${var.name_prefix}-service-storage"
 
