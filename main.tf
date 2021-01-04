@@ -145,6 +145,7 @@ resource "aws_efs_mount_target" "fs-target" {
 }
 
 resource "aws_security_group" "efs_service" {
+  count       = (var.create_efs_vol == true ? 1 : 0)
   vpc_id      = var.vpc_id
   name        = "${var.name_prefix}-efs-service-sg"
   description = "EFS service security group"
@@ -157,6 +158,7 @@ resource "aws_security_group" "efs_service" {
 }
 
 resource "aws_security_group_rule" "efs_egress_service" {
+  count             = (var.create_efs_vol == true ? 1 : 0)
   security_group_id = aws_security_group.efs_service.id
   type              = "egress"
   protocol          = "-1"
@@ -167,6 +169,7 @@ resource "aws_security_group_rule" "efs_egress_service" {
 }
 
 resource "aws_security_group_rule" "efs_ingress_service" {
+  count             = (var.create_efs_vol == true ? 1 : 0)
   security_group_id = aws_security_group.efs_service.id
   type              = "ingress"
   protocol          = "-1"
