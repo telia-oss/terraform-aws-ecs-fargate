@@ -208,6 +208,19 @@ resource "aws_ecs_task_definition" "task" {
 
   }
 
+  dynamic "volume" {
+    for_each = [var.assign_efs_vol_id]
+    content {
+      name = "${var.name_prefix}-service-storage"
+
+      efs_volume_configuration {
+        file_system_id = var.assign_efs_vol_id
+        root_directory = "/"
+      }
+    }
+
+  }
+
   container_definitions = <<EOF
 [{
     "name": "${var.container_name != "" ? var.container_name : var.name_prefix}",

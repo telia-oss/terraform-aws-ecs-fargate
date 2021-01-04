@@ -170,5 +170,5 @@ variable "create_efs_vol" {
 
 variable "assign_efs_vol_id" {
   description = "attach an EFS vol ID"
-  default     = ""
+  default     = null
 }
