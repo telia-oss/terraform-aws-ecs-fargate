@@ -160,7 +160,7 @@ resource "aws_security_group" "efs_service" {
 
 resource "aws_security_group_rule" "efs_egress_service" {
   count             = (var.create_efs_vol == true ? 1 : 0)
-  security_group_id = aws_security_group.efs_service.id
+  security_group_id = aws_security_group.efs_service[0].id
   type              = "egress"
   protocol          = "-1"
   from_port         = 0
@@ -171,7 +171,7 @@ resource "aws_security_group_rule" "efs_egress_service" {
 
 resource "aws_security_group_rule" "efs_ingress_service" {
   count             = (var.create_efs_vol == true ? 1 : 0)
-  security_group_id = aws_security_group.efs_service.id
+  security_group_id = aws_security_group.efs_service[0].id
   type              = "ingress"
   protocol          = "-1"
   from_port         = 0
