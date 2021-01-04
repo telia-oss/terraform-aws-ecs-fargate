@@ -240,6 +240,13 @@ resource "aws_ecs_task_definition" "task" {
       }
     ],
     %{~endif}
+    %{if var.assign_efs_vol_id != ""~}
+    "mountPoints": [
+      {"containerPath": "/opt/data",
+        "sourceVolume": "${var.name_prefix}-service-storage"
+      }
+    ],
+    %{~endif}
     "essential": true,
     "portMappings": [
         {
