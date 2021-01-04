@@ -199,7 +199,7 @@ resource "aws_ecs_task_definition" "task" {
       name = "${var.name_prefix}-service-storage"
 
       efs_volume_configuration {
-        file_system_id = locals.dyn_vols_to_create[0]
+        file_system_id = local.dyn_vols_to_create[0]
         root_directory = "/"
       }
     }
