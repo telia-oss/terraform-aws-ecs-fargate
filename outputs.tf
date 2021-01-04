@@ -41,3 +41,7 @@ output "log_group_name" {
   value       = aws_cloudwatch_log_group.main.name
 }
 
+output "efs_vol_id" {
+  description = "The id of the EFS vol if created"
+  value = aws_efs_file_system.fs[0].id
+}
