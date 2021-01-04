@@ -142,7 +142,7 @@ resource "aws_efs_mount_target" "fs-target" {
   for_each = var.private_subnet_ids
   file_system_id = aws_efs_file_system.fs[0].id
   subnet_id      = each.value
-  security_groups = [aws_security_group.efs_service.id]
+  security_groups = [aws_security_group.efs_service[0].id]
 }
 
 resource "aws_security_group" "efs_service" {
