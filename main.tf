@@ -138,6 +138,44 @@ resource "aws_efs_file_system" "fs" {
   }
 }
 
+resource "aws_efs_mount_target" "fs-target" {
+  count          = (var.create_efs_vol == true ? 1 : 0)
+  file_system_id = aws_efs_file_system.fs.id
+  subnet_id      = var.private_subnet_ids[0]
+}
+
+resource "aws_security_group" "efs_service" {
+  vpc_id      = var.vpc_id
+  name        = "${var.name_prefix}-efs-service-sg"
+  description = "EFS service security group"
+  tags = merge(
+    var.tags,
+    {
+      Name = "${var.name_prefix}-sg"
+    },
+  )
+}
+
+resource "aws_security_group_rule" "egress_service" {
+  security_group_id = aws_security_group.efs_service.id
+  type              = "egress"
+  protocol          = "-1"
+  from_port         = 0
+  to_port           = 0
+  cidr_blocks       = ["0.0.0.0/0"]
+  ipv6_cidr_blocks  = ["::/0"]
+}
+
+resource "aws_security_group_rule" "ingress_service" {
+  security_group_id = aws_security_group.efs_service.id
+  type              = "ingress"
+  protocol          = "-1"
+  from_port         = 0
+  to_port           = 0
+  cidr_blocks       = ["0.0.0.0/0"]
+  ipv6_cidr_blocks  = ["::/0"]
+}
+
 resource "aws_ecs_task_definition" "task" {
   family                   = var.name_prefix
   execution_role_arn       = aws_iam_role.execution.arn
