@@ -127,7 +127,6 @@ locals {
       value = v
     }
   ]
-  dyn_vols_to_create = concat(aws_efs_file_system.fs[*].id, [var.assign_efs_vol_id])
 }
 
 resource "aws_efs_file_system" "fs" {
@@ -183,6 +182,9 @@ resource "aws_security_group_rule" "efs_ingress_service" {
   ipv6_cidr_blocks  = ["::/0"]
 }
 
+locals {
+  dyn_vols_to_create = concat(aws_efs_file_system.fs[*].id, var.assign_efs_vol_id)
+}
 
 resource "aws_ecs_task_definition" "task" {
   family                   = var.name_prefix
