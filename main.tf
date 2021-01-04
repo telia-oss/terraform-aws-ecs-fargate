@@ -216,7 +216,7 @@ resource "aws_ecs_task_definition" "task" {
     %{if length(var.task_container_secrets) > 0~}
     "secrets": ${jsonencode(var.task_container_secrets)},
     %{~endif}
-    %{if var.create_efs_vol == "true"~}
+    %{if var.create_efs_vol == true~}
     "mountPoints": [
       {"containerPath": "/opt/data",
         "sourceVolume": "${var.name_prefix}-service-storage"
