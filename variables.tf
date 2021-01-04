@@ -167,3 +167,8 @@ variable "create_efs_vol" {
   description = "Create an EFS Volume and mount it to /opt/data"
   default     = false
 }
+
+variable "assign_efs_vol_id" {
+  description = "attach an EFS vol ID"
+  default     = ""
+}

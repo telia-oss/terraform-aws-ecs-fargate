@@ -141,9 +141,9 @@ resource "aws_efs_file_system" "fs" {
 
 
 resource "aws_efs_mount_target" "fs-target" {
-  count = (var.create_efs_vol == true ? length(var.private_subnet_ids) : 0)
-  file_system_id = aws_efs_file_system.fs[0].id
-  subnet_id      = var.private_subnet_ids[count.index]
+  count           = (var.create_efs_vol == true ? length(var.private_subnet_ids) : 0)
+  file_system_id  = aws_efs_file_system.fs[0].id
+  subnet_id       = var.private_subnet_ids[count.index]
   security_groups = [aws_security_group.efs_service[0].id]
 }
 
@@ -182,6 +182,10 @@ resource "aws_security_group_rule" "efs_ingress_service" {
   ipv6_cidr_blocks  = ["::/0"]
 }
 
+locals {
+  dyn_vols_to_create = concat(aws_efs_file_system.fs[*].id, [var.assign_efs_vol_id])
+}
+
 resource "aws_ecs_task_definition" "task" {
   family                   = var.name_prefix
   execution_role_arn       = aws_iam_role.execution.arn
@@ -192,12 +196,12 @@ resource "aws_ecs_task_definition" "task" {
   task_role_arn            = aws_iam_role.task.arn
 
   dynamic "volume" {
-    for_each = aws_efs_file_system.fs[*].id
+    for_each = locals.dyn_vols_to_create
     content {
-      name = (var.create_efs_vol == true ? "${var.name_prefix}-service-storage" : "")
+      name = "${var.name_prefix}-service-storage"
 
       efs_volume_configuration {
-        file_system_id = aws_efs_file_system.fs[0].id
+        file_system_id = locals.dyn_vols_to_create[0]
         root_directory = "/"
       }
     }
