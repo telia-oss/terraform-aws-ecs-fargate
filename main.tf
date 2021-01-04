@@ -182,9 +182,9 @@ resource "aws_security_group_rule" "efs_ingress_service" {
   ipv6_cidr_blocks  = ["::/0"]
 }
 
-locals {
-  dyn_vols_to_create = concat(aws_efs_file_system.fs[*].id, var.assign_efs_vol_id)
-}
+// locals {
+//   dyn_vols_to_create = concat(aws_efs_file_system.fs[*].id, var.assign_efs_vol_id)
+// }
 
 resource "aws_ecs_task_definition" "task" {
   family                   = var.name_prefix
@@ -196,12 +196,12 @@ resource "aws_ecs_task_definition" "task" {
   task_role_arn            = aws_iam_role.task.arn
 
   dynamic "volume" {
-    for_each = (length(local.dyn_vols_to_create != 0 ? [] : local.dyn_vols_to_create ))
+    for_each = aws_efs_file_system.fs[*].id
     content {
       name = "${var.name_prefix}-service-storage"
 
       efs_volume_configuration {
-        file_system_id = local.dyn_vols_to_create[0]
+        file_system_id = aws_efs_file_system.fs[0].id
         root_directory = "/"
       }
     }
