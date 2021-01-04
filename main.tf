@@ -211,7 +211,7 @@ resource "aws_ecs_task_definition" "task" {
   dynamic "volume" {
     for_each = [var.assign_efs_vol_id]
     content {
-      name = "${var.name_prefix}-service-storage"
+      name = "${var.name_prefix}-service-storage-x"
 
       efs_volume_configuration {
         file_system_id = var.assign_efs_vol_id
