@@ -138,12 +138,13 @@ resource "aws_efs_file_system" "fs" {
   }
 }
 
+
+
 resource "aws_efs_mount_target" "fs-target" {
-  count = length(var.private_subnet_ids)
+  count = (var.create_efs_vol == true ? length(var.private_subnet_ids) : 0)
   file_system_id = aws_efs_file_system.fs[0].id
   subnet_id      = var.private_subnet_ids[count.index]
   security_groups = [aws_security_group.efs_service[0].id]
-  depends_on = [aws_efs_file_system.fs]
 }
 
 resource "aws_security_group" "efs_service" {
