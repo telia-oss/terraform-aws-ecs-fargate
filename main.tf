@@ -83,9 +83,10 @@ resource "aws_security_group_rule" "egress_service" {
 # LB Target group
 # ------------------------------------------------------------------------------
 resource "aws_lb_target_group" "task" {
+  for_each    = var.task_container_ports
   vpc_id      = var.vpc_id
   protocol    = var.task_container_protocol
-  port        = var.task_container_port
+  port        = each.value
   target_type = "ip"
   dynamic "health_check" {
     for_each = [var.health_check]
@@ -112,7 +113,7 @@ resource "aws_lb_target_group" "task" {
   tags = merge(
     var.tags,
     {
-      Name = "${var.name_prefix}-target-${var.task_container_port}"
+      Name = "${var.name_prefix}-target-${each.key}-${each.value}"
     },
   )
 }
@@ -173,6 +174,13 @@ resource "aws_ecs_task_definition" "task" {
 EOF
 }
 
+locals {
+  task_container_ports = for_each = var.lb_arn == "" ? [] : [1]
+
+}
+
+
+
 resource "aws_ecs_service" "service" {
   depends_on                         = [null_resource.lb_exists]
   name                               = var.name_prefix
@@ -191,12 +199,14 @@ resource "aws_ecs_service" "service" {
   }
 
   dynamic "load_balancer" {
-    for_each = var.lb_arn == "" ? [] : [1]
+    # for_each = var.lb_arn == "" ? [] : [1]
+    for_each = local.task_container_ports
     content {
       container_name   = var.container_name != "" ? var.container_name : var.name_prefix
-      container_port   = var.task_container_port
-      target_group_arn = aws_lb_target_group.task.arn
+      container_port   = each.value
+      target_group_arn = aws_lb_target_group.task[each.key].arn
     }
+    # }
   }
 
   deployment_controller {

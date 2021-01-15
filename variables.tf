@@ -61,9 +61,9 @@ variable "task_container_assign_public_ip" {
   type        = bool
 }
 
-variable "task_container_port" {
+variable "task_container_ports" {
   description = "Port that the container exposes."
-  type        = number
+  type        = map(string, number)
 }
 
 variable "task_container_protocol" {
