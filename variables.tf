@@ -184,5 +184,5 @@ variable "stop_timeout" {
 }
 
 variable "with_service_discovery_srv_record" {
-  default     = false
+  default = false
 }
