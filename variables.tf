@@ -172,7 +172,7 @@ variable "service_registry_arn" {
   type        = string
 }
 
-variable "service_discovery_srv_record" {
+variable "with_service_discovery_srv_record" {
   default     = true
   type        = bool
   description = "Set to false if you specify a SRV DNS record in aws_service_discovery_service. If only A record, set this to false."
