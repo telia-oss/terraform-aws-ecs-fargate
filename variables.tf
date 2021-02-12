@@ -66,6 +66,22 @@ variable "task_container_port" {
   type        = number
 }
 
+variable "task_container_port_mappings" {
+  description = "List of port objects that the container exposes in addition to the task_container_port."
+  type = list(object({
+    containerPort = number
+    hostPort      = number
+    protocol      = string
+  }))
+  default = [
+    {
+      containerPort = 80
+      hostPort      = 80
+      protocol      = "tcp"
+    }
+  ]
+}
+
 variable "task_container_protocol" {
   description = "Protocol that the container exposes."
   default     = "HTTP"
@@ -165,4 +181,8 @@ variable "service_discovery_srv_record" {
 variable "stop_timeout" {
   description = "Time duration (in seconds) to wait before the container is forcefully killed if it doesn't exit normally on its own. On Fargate the maximum value is 120 seconds."
   default     = 30
+}
+
+variable "with_service_discovery_srv_record" {
+  default     = false
 }

@@ -151,13 +151,16 @@ resource "aws_ecs_task_definition" "task" {
     "secrets": ${jsonencode(var.task_container_secrets)},
     %{~endif}
     "essential": true,
-    "portMappings": [
-        {
-            "containerPort": ${var.task_container_port},
-            "hostPort": ${var.task_container_port},
+    "portMappings":
+      ${jsonencode(concat(
+        "${var.task_container_port_mappings}",
+        [{
+            "containerPort": "${var.task_container_port}",
+            "hostPort": "${var.task_container_port}",
             "protocol":"tcp"
-        }
-    ],
+        }]
+        ))}
+    ,
     "logConfiguration": {
         "logDriver": "awslogs",
         "options": {
