@@ -102,6 +102,12 @@ variable "log_retention_in_days" {
   type        = number
 }
 
+variable "log_multiline_pattern" {
+  description = "Optional regular expression. Log messages will consist of a line that matches expression and any following lines that don't"
+  default     = ""
+  type        = string
+}
+
 variable "health_check" {
   description = "A health block containing health check settings for the target group. Overrides the defaults."
   type        = map(string)
