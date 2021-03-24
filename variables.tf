@@ -13,8 +13,9 @@ variable "container_name" {
 }
 
 variable "task_container_secrets" {
-  type    = list(object({ name = string, valueFrom = string }))
-  default = []
+  description = "See https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-ecs-taskdefinition-secret.html . Beware: Only Secrets Manager secrets supported. The necessary permissions will be added automatically."
+  type        = list(object({ name = string, valueFrom = string }))
+  default     = []
 }
 
 variable "task_container_secrets_kms_key" {
