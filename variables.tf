@@ -167,3 +167,9 @@ variable "stop_timeout" {
   description = "Time duration (in seconds) to wait before the container is forcefully killed if it doesn't exit normally on its own. On Fargate the maximum value is 120 seconds."
   default     = 30
 }
+
+variable "task_role_permissions_boundary_arn" {
+  description = "ARN of the policy that is used to set the permissions boundary for the task (and task execution) role."
+  default     = ""
+  type        = string
+}
