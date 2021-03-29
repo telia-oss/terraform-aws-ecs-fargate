@@ -6,8 +6,8 @@ terraform {
 }
 
 provider "aws" {
-  version = ">= 2.17"
-  region  = var.region
+
+  region = var.region
 }
 
 data "aws_vpc" "main" {
