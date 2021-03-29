@@ -176,6 +176,6 @@ variable "task_role_permissions_boundary_arn" {
 
 variable "protocol_version" {
   description = "The protocol (HTTP) version."
-  default     = "HTTP"
+  default     = "HTTP1"
   type        = string
 }
