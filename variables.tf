@@ -67,6 +67,16 @@ variable "task_container_port" {
   type        = number
 }
 
+variable "task_container_port_mappings" {
+  description = "List of port objects that the container exposes in addition to the task_container_port."
+  type = list(object({
+    containerPort = number
+    hostPort      = number
+    protocol      = string
+  }))
+  default = []
+}
+
 variable "task_container_protocol" {
   description = "Protocol that the container exposes."
   default     = "HTTP"
