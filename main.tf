@@ -170,6 +170,9 @@ resource "aws_ecs_task_definition" "task" {
         "options": {
             "awslogs-group": "${aws_cloudwatch_log_group.main.name}",
             "awslogs-region": "${data.aws_region.current.name}",
+            %{if var.log_multiline_pattern != ""~}
+            "awslogs-multiline-pattern": "${var.log_multiline_pattern}",
+            %{~endif}
             "awslogs-stream-prefix": "container"
         }
     },
