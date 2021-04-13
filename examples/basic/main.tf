@@ -2,12 +2,11 @@
 # Create a ecs service using fargate
 # ----------------------------------------
 terraform {
-  required_version = ">= 0.12"
+  required_version = ">= 0.14"
 }
 
 provider "aws" {
-  version = ">= 2.17"
-  region  = var.region
+  region = var.region
 }
 
 data "aws_vpc" "main" {

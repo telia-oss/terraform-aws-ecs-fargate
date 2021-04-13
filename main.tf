@@ -16,8 +16,9 @@ resource "aws_cloudwatch_log_group" "main" {
 # IAM - Task execution role, needed to pull ECR images etc.
 # ------------------------------------------------------------------------------
 resource "aws_iam_role" "execution" {
-  name               = "${var.name_prefix}-task-execution-role"
-  assume_role_policy = data.aws_iam_policy_document.task_assume.json
+  name                 = "${var.name_prefix}-task-execution-role"
+  assume_role_policy   = data.aws_iam_policy_document.task_assume.json
+  permissions_boundary = var.task_role_permissions_boundary_arn
 }
 
 resource "aws_iam_role_policy" "task_execution" {
@@ -44,8 +45,9 @@ resource "aws_iam_role_policy" "read_task_container_secrets" {
 # when they use the module. S3, Dynamo permissions etc etc.
 # ------------------------------------------------------------------------------
 resource "aws_iam_role" "task" {
-  name               = "${var.name_prefix}-task-role"
-  assume_role_policy = data.aws_iam_policy_document.task_assume.json
+  name                 = "${var.name_prefix}-task-role"
+  assume_role_policy   = data.aws_iam_policy_document.task_assume.json
+  permissions_boundary = var.task_role_permissions_boundary_arn
 }
 
 resource "aws_iam_role_policy" "log_agent" {
@@ -101,6 +103,7 @@ resource "aws_lb_target_group" "task" {
       unhealthy_threshold = lookup(health_check.value, "unhealthy_threshold", null)
     }
   }
+  protocol_version = var.protocol_version
 
   # NOTE: TF is unable to destroy a target group while a listener is attached,
   # therefor we have to create a new one before destroying the old. This also means
