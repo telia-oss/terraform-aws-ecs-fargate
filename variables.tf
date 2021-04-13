@@ -13,8 +13,9 @@ variable "container_name" {
 }
 
 variable "task_container_secrets" {
-  type    = list(object({ name = string, valueFrom = string }))
-  default = []
+  description = "See https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-ecs-taskdefinition-secret.html . Beware: Only Secrets Manager secrets supported. The necessary permissions will be added automatically."
+  type        = list(object({ name = string, valueFrom = string }))
+  default     = []
 }
 
 variable "task_container_secrets_kms_key" {
@@ -64,6 +65,16 @@ variable "task_container_assign_public_ip" {
 variable "task_container_port" {
   description = "Port that the container exposes."
   type        = number
+}
+
+variable "task_container_port_mappings" {
+  description = "List of port objects that the container exposes in addition to the task_container_port."
+  type = list(object({
+    containerPort = number
+    hostPort      = number
+    protocol      = string
+  }))
+  default = []
 }
 
 variable "task_container_protocol" {
@@ -165,4 +176,16 @@ variable "with_service_discovery_srv_record" {
 variable "stop_timeout" {
   description = "Time duration (in seconds) to wait before the container is forcefully killed if it doesn't exit normally on its own. On Fargate the maximum value is 120 seconds."
   default     = 30
+}
+
+variable "task_role_permissions_boundary_arn" {
+  description = "ARN of the policy that is used to set the permissions boundary for the task (and task execution) role."
+  default     = ""
+  type        = string
+}
+
+variable "protocol_version" {
+  description = "The protocol (HTTP) version."
+  default     = "HTTP1"
+  type        = string
 }
