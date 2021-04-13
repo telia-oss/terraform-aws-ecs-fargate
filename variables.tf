@@ -74,13 +74,7 @@ variable "task_container_port_mappings" {
     hostPort      = number
     protocol      = string
   }))
-  default = [
-    {
-      containerPort = 80
-      hostPort      = 80
-      protocol      = "tcp"
-    }
-  ]
+  default = []
 }
 
 variable "task_container_protocol" {
