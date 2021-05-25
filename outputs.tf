@@ -27,12 +27,12 @@ output "task_role_name" {
 }
 
 output "task_execution_role_arn" {
-  description = "The Amazon Resource Name (ARN) specifying the service role."
+  description = "The Amazon Resource Name (ARN) specifying the execution service role."
   value       = aws_iam_role.execution.arn
 }
 
 output "task_execution_role_name" {
-  description = "The name of the service role."
+  description = "The name of the execution service role."
   value       = aws_iam_role.execution.name
 }
 
