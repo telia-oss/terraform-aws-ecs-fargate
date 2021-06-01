@@ -222,9 +222,6 @@ resource "aws_ecs_service" "service" {
       container_name = var.container_name != "" ? var.container_name : var.name_prefix
     }
   }
-  lifecycle {
-    ignore_changes = [task_definition]
-  }
 }
 
 # HACK: The workaround used in ecs/service does not work for some reason in this module, this fixes the following error:
