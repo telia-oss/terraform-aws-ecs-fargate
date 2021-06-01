@@ -65,8 +65,7 @@ resource "aws_security_group_rule" "alb_ingress_80" {
 }
 
 resource "aws_efs_file_system" "efs" {
-  creation_token = "blah"
-  encrypted      = true
+  encrypted = true
 }
 
 resource "aws_efs_access_point" "efs" {
