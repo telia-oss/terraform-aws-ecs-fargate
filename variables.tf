@@ -195,3 +195,9 @@ variable "protocol_version" {
   default     = "HTTP1"
   type        = string
 }
+
+variable "enable_application_autoscaling" {
+  description = "Set to true to prevent redeploys resetting desired count levels set by application autoscaling"
+  default     = false
+  type        = bool
+}

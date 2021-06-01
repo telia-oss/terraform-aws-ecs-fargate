@@ -3,7 +3,7 @@
 # ------------------------------------------------------------------------------
 output "service_arn" {
   description = "The Amazon Resource Name (ARN) that identifies the service."
-  value       = aws_ecs_service.service.id
+  value       = try(aws_ecs_service.service[0].id,aws_ecs_service.service_autoscale[0].id)
 }
 
 output "target_group_arn" {
@@ -43,7 +43,7 @@ output "service_sg_id" {
 
 output "service_name" {
   description = "The name of the service."
-  value       = aws_ecs_service.service.name
+  value       = try(aws_ecs_service.service[0].name,aws_ecs_service.service_autoscale[0].name)
 }
 
 output "log_group_name" {
