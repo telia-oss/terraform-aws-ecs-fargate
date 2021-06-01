@@ -181,6 +181,22 @@ resource "aws_ecs_task_definition" "task" {
     "environment": ${jsonencode(local.task_environment)}
 }]
 EOF
+
+dynamic "volume" {
+  for_each = var.efs_volumes
+  content {
+    name = volume.value["name"]
+    efs_volume_configuration {
+      file_system_id     = volume.value["file_system_id"]
+      root_directory     = volume.value["root_directory"]
+      transit_encryption = "ENABLED"
+      authorization_config {
+        access_point_id = volume.value["access_point_id"]
+        iam             = "ENABLED"
+      }
+    }
+  }
+}
 }
 
 resource "aws_ecs_service" "service" {

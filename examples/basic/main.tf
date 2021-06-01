@@ -64,6 +64,16 @@ resource "aws_security_group_rule" "alb_ingress_80" {
   ipv6_cidr_blocks  = ["::/0"]
 }
 
+resource "aws_efs_file_system" "efs" {
+  creation_token = "blah"
+  encrypted      = true
+}
+
+resource "aws_efs_access_point" "efs" {
+  file_system_id = aws_efs_file_system.efs.id
+}
+
+
 resource "aws_ecs_cluster" "cluster" {
   name = "${var.name_prefix}-cluster"
 }
@@ -100,6 +110,13 @@ module "fargate" {
     port = "traffic-port"
     path = "/"
   }
+
+  efs_volumes = [{
+    name            = "storage"
+    file_system_id  = aws_efs_file_system.efs.id
+    root_directory  = "/opt/files/"
+    access_point_id = aws_efs_access_point.efs.id
+  }]
 
   tags = {
     environment = "dev"
