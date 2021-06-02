@@ -164,7 +164,15 @@ resource "aws_ecs_task_definition" "task" {
     "hostPort" : var.task_container_port,
     "protocol" : "tcp"
   }]
-))},
+  ))},
+    %{if length(var.efs_volumes) > 0~}
+    "MountPoints": ${jsonencode([
+  for v in var.efs_volumes : {
+    containerPath = v.mount_point
+    readOnly      = v.readOnly
+    sourceVolume  = v.name
+}])},
+    %{~endif}
     "logConfiguration": {
         "logDriver": "awslogs",
         "options": {

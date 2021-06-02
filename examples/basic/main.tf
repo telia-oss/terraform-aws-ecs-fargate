@@ -113,7 +113,9 @@ module "fargate" {
   efs_volumes = [{
     name            = "storage"
     file_system_id  = aws_efs_file_system.efs.id
-    root_directory  = "/opt/files/"
+    root_directory  = "/"
+    mount_point     = "/opt/files/"
+    readOnly        = false
     access_point_id = aws_efs_access_point.efs.id
   }]
 
