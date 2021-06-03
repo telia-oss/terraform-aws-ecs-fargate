@@ -13,7 +13,7 @@ variable "container_name" {
 }
 
 variable "task_container_secrets" {
-  description = "See https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-ecs-taskdefinition-secret.html . Beware: Only Secrets Manager secrets supported. The necessary permissions will be added automatically."
+  description = "See https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-ecs-taskdefinition-secret.html . The necessary permissions will be added automatically."
   type        = list(object({ name = string, valueFrom = string }))
   default     = []
 }

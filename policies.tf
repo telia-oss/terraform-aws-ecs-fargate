@@ -81,6 +81,7 @@ data "aws_iam_policy_document" "task_container_secrets" {
     )
     actions = [
       "secretsmanager:GetSecretValue",
+      "ssm:GetParameters",
       "kms:Decrypt",
     ]
   }
