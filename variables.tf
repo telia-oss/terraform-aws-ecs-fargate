@@ -200,5 +200,12 @@ variable "protocol_version" {
 variable "efs_volumes" {
   description = "Volumes definitions"
   default     = []
-  type        = list(any)
+  type = list(object({
+    name            = string
+    file_system_id  = string
+    root_directory  = string
+    mount_point     = string
+    readOnly        = bool
+    access_point_id = string
+  }))
 }
