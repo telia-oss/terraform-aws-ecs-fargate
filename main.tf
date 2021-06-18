@@ -196,6 +196,11 @@ resource "aws_ecs_service" "service" {
     type = var.deployment_controller_type
   }
 
+  deployment_circuit_breaker {
+    enable   = var.deployment_circuit_breaker.enable
+    rollback = var.deployment_circuit_breaker.rollback
+  }
+
   dynamic "service_registries" {
     for_each = var.service_registry_arn == "" ? [] : [1]
     content {

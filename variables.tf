@@ -201,3 +201,9 @@ variable "wait_for_steady_state" {
   type        = bool
   default     = false
 }
+
+variable "deployment_circuit_breaker" {
+  description = "Circuit breaking configuration for the ECS service."
+  type        = object({ enable = bool, rollback = bool })
+  default     = { enable = false, rollback = false }
+}
