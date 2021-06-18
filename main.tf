@@ -174,6 +174,7 @@ resource "aws_ecs_service" "service" {
   deployment_minimum_healthy_percent = var.deployment_minimum_healthy_percent
   deployment_maximum_percent         = var.deployment_maximum_percent
   health_check_grace_period_seconds  = var.lb_arn == "" ? null : var.health_check_grace_period_seconds
+  wait_for_steady_state              = var.wait_for_steady_state
 
   network_configuration {
     subnets          = var.private_subnet_ids

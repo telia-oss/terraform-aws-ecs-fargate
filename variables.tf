@@ -195,3 +195,9 @@ variable "protocol_version" {
   default     = "HTTP1"
   type        = string
 }
+
+variable "wait_for_steady_state" {
+  description = "Wait for the service to reach a steady state (like aws ecs wait services-stable) before continuing."
+  type        = bool
+  default     = false
+}
