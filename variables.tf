@@ -195,3 +195,15 @@ variable "protocol_version" {
   default     = "HTTP1"
   type        = string
 }
+
+variable "wait_for_steady_state" {
+  description = "Wait for the service to reach a steady state (like aws ecs wait services-stable) before continuing."
+  type        = bool
+  default     = false
+}
+
+variable "deployment_circuit_breaker" {
+  description = "Circuit breaking configuration for the ECS service."
+  type        = object({ enable = bool, rollback = bool })
+  default     = { enable = false, rollback = false }
+}

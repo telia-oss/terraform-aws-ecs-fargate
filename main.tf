@@ -126,12 +126,31 @@ resource "aws_lb_target_group" "task" {
 # ECS Task/Service
 # ------------------------------------------------------------------------------
 locals {
-  task_environment = [
-    for k, v in var.task_container_environment : {
-      name  = k
-      value = v
+  log_multiline_pattern        = var.log_multiline_pattern != "" ? { "awslogs-multiline-pattern" = var.log_multiline_pattern } : null
+  task_container_secrets       = length(var.task_container_secrets) > 0 ? { "secrets" = var.task_container_secrets } : null
+  repository_credentials       = length(var.repository_credentials) > 0 ? { "repositoryCredentials" = { "credentialsParameter" = var.repository_credentials } } : null
+  task_container_port_mappings = concat(var.task_container_port_mappings, [{ containerPort = var.task_container_port, hostPort = var.task_container_port, protocol = "tcp" }])
+  task_container_environment   = [for k, v in var.task_container_environment : { name = k, value = v }]
+
+  log_configuration_options = merge({
+    "awslogs-group"         = aws_cloudwatch_log_group.main.name
+    "awslogs-region"        = data.aws_region.current.name
+    "awslogs-stream-prefix" = "container"
+  }, local.log_multiline_pattern)
+
+  container_definition = merge({
+    "name"         = var.container_name != "" ? var.container_name : var.name_prefix
+    "image"        = var.task_container_image,
+    "essential"    = true
+    "portMappings" = local.task_container_port_mappings
+    "stopTimeout"  = var.stop_timeout
+    "command"      = var.task_container_command
+    "environment"  = local.task_container_environment
+    "logConfiguration" = {
+      "logDriver" = "awslogs"
+      "options"   = local.log_configuration_options
     }
-  ]
+  }, local.task_container_secrets, local.repository_credentials)
 }
 
 resource "aws_ecs_task_definition" "task" {
@@ -142,45 +161,7 @@ resource "aws_ecs_task_definition" "task" {
   cpu                      = var.task_definition_cpu
   memory                   = var.task_definition_memory
   task_role_arn            = aws_iam_role.task.arn
-
-  container_definitions = <<EOF
-[{
-    "name": "${var.container_name != "" ? var.container_name : var.name_prefix}",
-    "image": "${var.task_container_image}",
-    %{if var.repository_credentials != ""~}
-    "repositoryCredentials": {
-        "credentialsParameter": "${var.repository_credentials}"
-    },
-    %{~endif}
-    %{if length(var.task_container_secrets) > 0~}
-    "secrets": ${jsonencode(var.task_container_secrets)},
-    %{~endif}
-    "essential": true,
-    "portMappings":
-      ${jsonencode(concat(
-  var.task_container_port_mappings,
-  [{
-    "containerPort" : var.task_container_port,
-    "hostPort" : var.task_container_port,
-    "protocol" : "tcp"
-  }]
-))},
-    "logConfiguration": {
-        "logDriver": "awslogs",
-        "options": {
-            "awslogs-group": "${aws_cloudwatch_log_group.main.name}",
-            "awslogs-region": "${data.aws_region.current.name}",
-            %{if var.log_multiline_pattern != ""~}
-            "awslogs-multiline-pattern": "${var.log_multiline_pattern}",
-            %{~endif}
-            "awslogs-stream-prefix": "container"
-        }
-    },
-    "stopTimeout": ${var.stop_timeout},
-    "command": ${jsonencode(var.task_container_command)},
-    "environment": ${jsonencode(local.task_environment)}
-}]
-EOF
+  container_definitions    = jsonencode([local.container_definition])
 }
 
 resource "aws_ecs_service" "service" {
@@ -193,6 +174,7 @@ resource "aws_ecs_service" "service" {
   deployment_minimum_healthy_percent = var.deployment_minimum_healthy_percent
   deployment_maximum_percent         = var.deployment_maximum_percent
   health_check_grace_period_seconds  = var.lb_arn == "" ? null : var.health_check_grace_period_seconds
+  wait_for_steady_state              = var.wait_for_steady_state
 
   network_configuration {
     subnets          = var.private_subnet_ids
@@ -212,6 +194,11 @@ resource "aws_ecs_service" "service" {
   deployment_controller {
     # The deployment controller type to use. Valid values: CODE_DEPLOY, ECS.
     type = var.deployment_controller_type
+  }
+
+  deployment_circuit_breaker {
+    enable   = var.deployment_circuit_breaker.enable
+    rollback = var.deployment_circuit_breaker.rollback
   }
 
   dynamic "service_registries" {
