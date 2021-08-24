@@ -85,7 +85,8 @@ resource "aws_security_group_rule" "egress_service" {
 # LB Target group
 # ------------------------------------------------------------------------------
 resource "aws_lb_target_group" "task" {
-  name = "${var.name_prefix}-${var.task_container_port}"
+  count = var.lb_arn == "" ? 0 : 1
+  name  = "${var.name_prefix}-${var.task_container_port}"
 
   vpc_id      = var.vpc_id
   protocol    = var.task_container_protocol
@@ -156,10 +157,11 @@ resource "aws_ecs_task_definition" "task" {
     "secrets": ${jsonencode(var.task_container_secrets)},
     %{~endif}
     "essential": true,
+    "privileged": ${var.privileged ? "true" : "false"},
     "portMappings":
       ${jsonencode(concat(
   var.task_container_port_mappings,
-  [{
+  var.task_container_port == 0 ? [] : [{
     "containerPort" : var.task_container_port,
     "hostPort" : var.task_container_port,
     "protocol" : "tcp"
@@ -217,6 +219,7 @@ resource "aws_ecs_service" "service" {
   deployment_minimum_healthy_percent = var.deployment_minimum_healthy_percent
   deployment_maximum_percent         = var.deployment_maximum_percent
   health_check_grace_period_seconds  = var.lb_arn == "" ? null : var.health_check_grace_period_seconds
+  wait_for_steady_state              = var.wait_for_steady_state
 
   network_configuration {
     subnets          = var.private_subnet_ids
@@ -229,7 +232,7 @@ resource "aws_ecs_service" "service" {
     content {
       container_name   = var.container_name != "" ? var.container_name : var.name_prefix
       container_port   = var.task_container_port
-      target_group_arn = aws_lb_target_group.task.arn
+      target_group_arn = aws_lb_target_group.task[0].arn
     }
   }
 

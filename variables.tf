@@ -65,6 +65,7 @@ variable "task_container_assign_public_ip" {
 variable "task_container_port" {
   description = "Port that the container exposes."
   type        = number
+  default     = 0
 }
 
 variable "task_container_port_mappings" {
@@ -122,6 +123,7 @@ variable "log_multiline_pattern" {
 variable "health_check" {
   description = "A health block containing health check settings for the target group. Overrides the defaults."
   type        = map(string)
+  default     = {}
 }
 
 variable "health_check_grace_period_seconds" {
@@ -190,12 +192,17 @@ variable "task_role_permissions_boundary_arn" {
   type        = string
 }
 
+variable "wait_for_steady_state" {
+  description = "Wait for steady state"
+  default     = false
+  type        = bool
+}
+
 variable "protocol_version" {
   description = "The protocol (HTTP) version."
   default     = "HTTP1"
   type        = string
 }
-
 
 variable "efs_volumes" {
   description = "Volumes definitions"
@@ -209,3 +216,10 @@ variable "efs_volumes" {
     access_point_id = string
   }))
 }
+
+variable "privileged" {
+  description = "When this parameter is true, the container is given elevated privileges on the host container instance"
+  default     = false
+  type        = bool
+}
+
