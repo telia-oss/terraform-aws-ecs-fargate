@@ -157,7 +157,7 @@ resource "aws_ecs_task_definition" "task" {
     "secrets": ${jsonencode(var.task_container_secrets)},
     %{~endif}
     "essential": true,
-    "privileged": ${var.privileged ? "true" : "false"},
+    "privileged": ${var.privileged},
     "portMappings":
       ${jsonencode(concat(
   var.task_container_port_mappings,
