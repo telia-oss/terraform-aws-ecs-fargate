@@ -165,7 +165,10 @@ resource "aws_ecs_task_definition" "task" {
 }
 
 resource "aws_ecs_service" "service" {
-  depends_on                         = [null_resource.lb_exists]
+  depends_on                         = [
+    null_resource.lb_exists,
+    aws_iam_role_policy.task_execution,
+  ]
   name                               = var.name_prefix
   cluster                            = var.cluster_id
   task_definition                    = aws_ecs_task_definition.task.arn
