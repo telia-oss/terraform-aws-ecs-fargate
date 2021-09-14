@@ -165,7 +165,7 @@ resource "aws_ecs_task_definition" "task" {
 }
 
 resource "aws_ecs_service" "service" {
-  depends_on                         = [
+  depends_on = [
     null_resource.lb_exists,
     aws_iam_role_policy.task_execution,
   ]
