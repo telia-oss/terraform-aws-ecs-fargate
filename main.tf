@@ -168,6 +168,9 @@ resource "aws_ecs_service" "service" {
   depends_on = [
     null_resource.lb_exists,
     aws_iam_role_policy.task_execution,
+    aws_iam_role_policy.log_agent,
+    aws_iam_role_policy.read_repository_credentials,
+    aws_iam_role_policy.read_task_container_secrets,
   ]
   name                               = var.name_prefix
   cluster                            = var.cluster_id
