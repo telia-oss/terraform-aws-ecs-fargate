@@ -153,6 +153,7 @@ locals {
       "logDriver" = "awslogs"
       "options"   = local.log_configuration_options
     }
+    "privileged" : var.privileged
   }, local.task_container_secrets, local.repository_credentials)
 }
 
