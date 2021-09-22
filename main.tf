@@ -127,12 +127,33 @@ resource "aws_lb_target_group" "task" {
 # ECS Task/Service
 # ------------------------------------------------------------------------------
 locals {
-  task_environment = [
-    for k, v in var.task_container_environment : {
-      name  = k
-      value = v
+  log_multiline_pattern        = var.log_multiline_pattern != "" ? { "awslogs-multiline-pattern" = var.log_multiline_pattern } : null
+  task_container_secrets       = length(var.task_container_secrets) > 0 ? { "secrets" = var.task_container_secrets } : null
+  repository_credentials       = length(var.repository_credentials) > 0 ? { "repositoryCredentials" = { "credentialsParameter" = var.repository_credentials } } : null
+  task_container_port_mappings = concat(var.task_container_port_mappings, [{ containerPort = var.task_container_port, hostPort = var.task_container_port, protocol = "tcp" }])
+  task_container_environment   = [for k, v in var.task_container_environment : { name = k, value = v }]
+  task_container_mount_points  = [for v in var.efs_volumes : { containerPath = v.mount_point, readOnly = v.readOnly, sourceVolume = v.name }]
+
+  log_configuration_options = merge({
+    "awslogs-group"         = aws_cloudwatch_log_group.main.name
+    "awslogs-region"        = data.aws_region.current.name
+    "awslogs-stream-prefix" = "container"
+  }, local.log_multiline_pattern)
+
+  container_definition = merge({
+    "name"         = var.container_name != "" ? var.container_name : var.name_prefix
+    "image"        = var.task_container_image,
+    "essential"    = true
+    "portMappings" = local.task_container_port_mappings
+    "stopTimeout"  = var.stop_timeout
+    "command"      = var.task_container_command
+    "environment"  = local.task_container_environment
+    "MountPoints"  = local.task_container_mount_points
+    "logConfiguration" = {
+      "logDriver" = "awslogs"
+      "options"   = local.log_configuration_options
     }
-  ]
+  }, local.task_container_secrets, local.repository_credentials)
 }
 
 resource "aws_ecs_task_definition" "task" {
@@ -143,74 +164,32 @@ resource "aws_ecs_task_definition" "task" {
   cpu                      = var.task_definition_cpu
   memory                   = var.task_definition_memory
   task_role_arn            = aws_iam_role.task.arn
-
-  container_definitions = <<EOF
-[{
-    "name": "${var.container_name != "" ? var.container_name : var.name_prefix}",
-    "image": "${var.task_container_image}",
-    %{if var.repository_credentials != ""~}
-    "repositoryCredentials": {
-        "credentialsParameter": "${var.repository_credentials}"
-    },
-    %{~endif}
-    %{if length(var.task_container_secrets) > 0~}
-    "secrets": ${jsonencode(var.task_container_secrets)},
-    %{~endif}
-    "essential": true,
-    "privileged": ${var.privileged},
-    "portMappings":
-      ${jsonencode(concat(
-  var.task_container_port_mappings,
-  var.task_container_port == 0 ? [] : [{
-    "containerPort" : var.task_container_port,
-    "hostPort" : var.task_container_port,
-    "protocol" : "tcp"
-  }]
-  ))},
-    %{if length(var.efs_volumes) > 0~}
-    "MountPoints": ${jsonencode([
-  for v in var.efs_volumes : {
-    containerPath = v.mount_point
-    readOnly      = v.readOnly
-    sourceVolume  = v.name
-}])},
-    %{~endif}
-    "logConfiguration": {
-        "logDriver": "awslogs",
-        "options": {
-            "awslogs-group": "${aws_cloudwatch_log_group.main.name}",
-            "awslogs-region": "${data.aws_region.current.name}",
-            %{if var.log_multiline_pattern != ""~}
-            "awslogs-multiline-pattern": "${var.log_multiline_pattern}",
-            %{~endif}
-            "awslogs-stream-prefix": "container"
+  dynamic "volume" {
+    for_each = var.efs_volumes
+    content {
+      name = volume.value["name"]
+      efs_volume_configuration {
+        file_system_id     = volume.value["file_system_id"]
+        root_directory     = volume.value["root_directory"]
+        transit_encryption = "ENABLED"
+        authorization_config {
+          access_point_id = volume.value["access_point_id"]
+          iam             = "ENABLED"
         }
-    },
-    "stopTimeout": ${var.stop_timeout},
-    "command": ${jsonencode(var.task_container_command)},
-    "environment": ${jsonencode(local.task_environment)}
-}]
-EOF
-
-dynamic "volume" {
-  for_each = var.efs_volumes
-  content {
-    name = volume.value["name"]
-    efs_volume_configuration {
-      file_system_id     = volume.value["file_system_id"]
-      root_directory     = volume.value["root_directory"]
-      transit_encryption = "ENABLED"
-      authorization_config {
-        access_point_id = volume.value["access_point_id"]
-        iam             = "ENABLED"
       }
     }
   }
-}
+  container_definitions = jsonencode([local.container_definition])
 }
 
 resource "aws_ecs_service" "service" {
-  depends_on                         = [null_resource.lb_exists]
+  depends_on = [
+    null_resource.lb_exists,
+    aws_iam_role_policy.task_execution,
+    aws_iam_role_policy.log_agent,
+    aws_iam_role_policy.read_repository_credentials,
+    aws_iam_role_policy.read_task_container_secrets,
+  ]
   name                               = var.name_prefix
   cluster                            = var.cluster_id
   task_definition                    = aws_ecs_task_definition.task.arn
@@ -239,6 +218,11 @@ resource "aws_ecs_service" "service" {
   deployment_controller {
     # The deployment controller type to use. Valid values: CODE_DEPLOY, ECS.
     type = var.deployment_controller_type
+  }
+
+  deployment_circuit_breaker {
+    enable   = var.deployment_circuit_breaker.enable
+    rollback = var.deployment_circuit_breaker.rollback
   }
 
   dynamic "service_registries" {
