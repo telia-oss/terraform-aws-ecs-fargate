@@ -207,3 +207,16 @@ variable "deployment_circuit_breaker" {
   type        = object({ enable = bool, rollback = bool })
   default     = { enable = false, rollback = false }
 }
+
+
+variable "aws_iam_role_execution_suffix" {
+  description = "Name suffix for task execution IAM role"
+  type        = string
+  default     = "-task-execution-role"
+}
+
+variable "aws_iam_role_task_suffix" {
+  description = "Name suffix for task IAM role"
+  type        = string
+  default     = "-task-role"
+}
