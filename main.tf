@@ -16,7 +16,7 @@ resource "aws_cloudwatch_log_group" "main" {
 # IAM - Task execution role, needed to pull ECR images etc.
 # ------------------------------------------------------------------------------
 resource "aws_iam_role" "execution" {
-  name                 = "${var.name_prefix}-task-execution-role"
+  name                 = "${var.name_prefix}${var.aws_iam_role_execution_suffix}"
   assume_role_policy   = data.aws_iam_policy_document.task_assume.json
   permissions_boundary = var.task_role_permissions_boundary_arn
 }
@@ -45,7 +45,7 @@ resource "aws_iam_role_policy" "read_task_container_secrets" {
 # when they use the module. S3, Dynamo permissions etc etc.
 # ------------------------------------------------------------------------------
 resource "aws_iam_role" "task" {
-  name                 = "${var.name_prefix}-task-role"
+  name                 = "${var.name_prefix}${var.aws_iam_role_task_suffix}"
   assume_role_policy   = data.aws_iam_policy_document.task_assume.json
   permissions_boundary = var.task_role_permissions_boundary_arn
 }
