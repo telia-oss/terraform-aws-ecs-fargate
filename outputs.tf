@@ -8,12 +8,12 @@ output "service_arn" {
 
 output "target_group_arn" {
   description = "The ARN of the Target Group."
-  value       = aws_lb_target_group.task.arn
+  value       = var.lb_arn == "" ? null : aws_lb_target_group.task[0].arn
 }
 
 output "target_group_name" {
   description = "The Name of the Target Group."
-  value       = aws_lb_target_group.task.name
+  value       = var.lb_arn == "" ? null : aws_lb_target_group.task[0].name
 }
 
 output "task_role_arn" {
