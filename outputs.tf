@@ -51,3 +51,8 @@ output "log_group_name" {
   value       = aws_cloudwatch_log_group.main.name
 }
 
+output "desired_count" {
+  description = "Desired count"
+  value       = var.desired_count
+}
+

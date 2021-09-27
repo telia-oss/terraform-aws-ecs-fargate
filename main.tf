@@ -131,6 +131,7 @@ locals {
   repository_credentials       = length(var.repository_credentials) > 0 ? { "repositoryCredentials" = { "credentialsParameter" = var.repository_credentials } } : null
   task_container_port_mappings = concat(var.task_container_port_mappings, [{ containerPort = var.task_container_port, hostPort = var.task_container_port, protocol = "tcp" }])
   task_container_environment   = [for k, v in var.task_container_environment : { name = k, value = v }]
+  task_container_mount_points  = [for v in var.efs_volumes : { containerPath = v.mount_point, readOnly = v.readOnly, sourceVolume = v.name }]
 
   log_configuration_options = merge({
     "awslogs-group"         = aws_cloudwatch_log_group.main.name
@@ -146,10 +147,12 @@ locals {
     "stopTimeout"  = var.stop_timeout
     "command"      = var.task_container_command
     "environment"  = local.task_container_environment
+    "MountPoints"  = local.task_container_mount_points
     "logConfiguration" = {
       "logDriver" = "awslogs"
       "options"   = local.log_configuration_options
     }
+    "privileged" : var.privileged
   }, local.task_container_secrets, local.repository_credentials)
 }
 
@@ -161,7 +164,22 @@ resource "aws_ecs_task_definition" "task" {
   cpu                      = var.task_definition_cpu
   memory                   = var.task_definition_memory
   task_role_arn            = aws_iam_role.task.arn
-  container_definitions    = jsonencode([local.container_definition])
+  dynamic "volume" {
+    for_each = var.efs_volumes
+    content {
+      name = volume.value["name"]
+      efs_volume_configuration {
+        file_system_id     = volume.value["file_system_id"]
+        root_directory     = volume.value["root_directory"]
+        transit_encryption = "ENABLED"
+        authorization_config {
+          access_point_id = volume.value["access_point_id"]
+          iam             = "ENABLED"
+        }
+      }
+    }
+  }
+  container_definitions = jsonencode([local.container_definition])
 }
 
 resource "aws_ecs_service" "service" {
