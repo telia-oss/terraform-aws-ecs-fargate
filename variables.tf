@@ -84,6 +84,12 @@ variable "task_container_protocol" {
   type        = string
 }
 
+variable "task_definition" {
+  description = "Provided task definition for the service."
+  default     = ""
+  type        = string
+}
+
 variable "task_definition_cpu" {
   description = "Amount of CPU to reserve for the task."
   default     = 256
