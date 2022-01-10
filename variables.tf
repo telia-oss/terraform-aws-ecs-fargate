@@ -241,3 +241,9 @@ variable "aws_iam_role_task_suffix" {
   type        = string
   default     = "-task-role"
 }
+
+variable "service_sg_ids" {
+  description = "List of security group to use"
+  type        = list(string)
+  default     = []
+}
