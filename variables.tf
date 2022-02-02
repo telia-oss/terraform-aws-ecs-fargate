@@ -247,3 +247,21 @@ variable "service_sg_ids" {
   type        = list(string)
   default     = []
 }
+
+variable "sidecar_containers" {
+  description = "List of sidecar containers"
+  type        = list(any)
+  default     = []
+}
+
+variable "mount_points" {
+  description = "List of mount points"
+  type        = list(any)
+  default     = []
+}
+
+variable "volumes" {
+  description = "List of volume"
+  type        = list(any)
+  default     = []
+}
