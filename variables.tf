@@ -108,6 +108,12 @@ variable "task_container_environment" {
   type        = map(string)
 }
 
+variable "log_group_name" {
+  description = "The name of the provided CloudWatch Logs log group to use."
+  default     = ""
+  type        = string
+}
+
 variable "log_retention_in_days" {
   description = "Number of days the logs will be retained in CloudWatch."
   default     = 30
