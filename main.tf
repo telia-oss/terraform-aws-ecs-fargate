@@ -52,6 +52,7 @@ resource "aws_iam_role" "task" {
 }
 
 resource "aws_iam_role_policy" "log_agent" {
+  count  = var.log_group_name != "" ? 0 : 1
   name   = "${var.name_prefix}-log-permissions"
   role   = aws_iam_role.task.id
   policy = data.aws_iam_policy_document.task_permissions.json
@@ -135,7 +136,7 @@ locals {
   task_container_mount_points  = [for v in var.efs_volumes : { containerPath = v.mount_point, readOnly = v.readOnly, sourceVolume = v.name }]
 
   log_configuration_options = merge({
-    "awslogs-group"         = var.log_group_name != "" ? var.log_group_name : aws_cloudwatch_log_group.main.name,
+    "awslogs-group"         = var.log_group_name != "" ? var.log_group_name : aws_cloudwatch_log_group.main.0.name,
     "awslogs-region"        = data.aws_region.current.name
     "awslogs-stream-prefix" = "container"
   }, local.log_multiline_pattern)
