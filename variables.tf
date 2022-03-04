@@ -247,3 +247,9 @@ variable "service_sg_ids" {
   type        = list(string)
   default     = []
 }
+
+variable "enable_execute_command" {
+  description = "Enable aws ecs execute_command"
+  type        = bool
+  default     = false
+}
