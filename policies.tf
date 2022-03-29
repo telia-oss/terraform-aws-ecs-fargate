@@ -16,9 +16,9 @@ data "aws_iam_policy_document" "task_permissions" {
   statement {
     effect = "Allow"
 
-    resources = [
-      "${aws_cloudwatch_log_group.main.arn}:*",
-    ]
+    resources = compact([
+      "${var.log_group_name != "" ? "" : aws_cloudwatch_log_group.main.0.arn}:*",
+    ])
 
     actions = [
       "logs:CreateLogStream",
