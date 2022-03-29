@@ -7,6 +7,7 @@ data "aws_region" "current" {}
 # Cloudwatch
 # ------------------------------------------------------------------------------
 resource "aws_cloudwatch_log_group" "main" {
+  count             = var.log_group_name != "" ? 0 : 1
   name              = var.name_prefix
   retention_in_days = var.log_retention_in_days
   tags              = var.tags
@@ -16,7 +17,7 @@ resource "aws_cloudwatch_log_group" "main" {
 # IAM - Task execution role, needed to pull ECR images etc.
 # ------------------------------------------------------------------------------
 resource "aws_iam_role" "execution" {
-  name                 = "${var.name_prefix}-task-execution-role"
+  name                 = "${var.name_prefix}${var.aws_iam_role_execution_suffix}"
   assume_role_policy   = data.aws_iam_policy_document.task_assume.json
   permissions_boundary = var.task_role_permissions_boundary_arn
 }
@@ -45,17 +46,24 @@ resource "aws_iam_role_policy" "read_task_container_secrets" {
 # when they use the module. S3, Dynamo permissions etc etc.
 # ------------------------------------------------------------------------------
 resource "aws_iam_role" "task" {
-  name                 = "${var.name_prefix}-task-role"
+  name                 = "${var.name_prefix}${var.aws_iam_role_task_suffix}"
   assume_role_policy   = data.aws_iam_policy_document.task_assume.json
   permissions_boundary = var.task_role_permissions_boundary_arn
 }
 
 resource "aws_iam_role_policy" "log_agent" {
+  count  = var.log_group_name != "" ? 0 : 1
   name   = "${var.name_prefix}-log-permissions"
   role   = aws_iam_role.task.id
   policy = data.aws_iam_policy_document.task_permissions.json
 }
 
+resource "aws_iam_role_policy" "ssm_agent" {
+  count  = var.enable_execute_command ? 1 : 0
+  name   = "${var.name_prefix}-ssm-permissions"
+  role   = aws_iam_role.task.id
+  policy = data.aws_iam_policy_document.ssm_task_permissions.json
+}
 # ------------------------------------------------------------------------------
 # Security groups
 # ------------------------------------------------------------------------------
@@ -85,8 +93,8 @@ resource "aws_security_group_rule" "egress_service" {
 # LB Target group
 # ------------------------------------------------------------------------------
 resource "aws_lb_target_group" "task" {
-  name = "${var.name_prefix}-${var.task_container_port}"
-
+  name        = "${var.name_prefix}-${var.task_container_port}"
+  count       = var.lb_arn == "" ? 0 : 1
   vpc_id      = var.vpc_id
   protocol    = var.task_container_protocol
   port        = var.task_container_port
@@ -129,11 +137,12 @@ locals {
   log_multiline_pattern        = var.log_multiline_pattern != "" ? { "awslogs-multiline-pattern" = var.log_multiline_pattern } : null
   task_container_secrets       = length(var.task_container_secrets) > 0 ? { "secrets" = var.task_container_secrets } : null
   repository_credentials       = length(var.repository_credentials) > 0 ? { "repositoryCredentials" = { "credentialsParameter" = var.repository_credentials } } : null
-  task_container_port_mappings = concat(var.task_container_port_mappings, [{ containerPort = var.task_container_port, hostPort = var.task_container_port, protocol = "tcp" }])
+  task_container_port_mappings = var.task_container_port == 0 ? var.task_container_port_mappings : concat(var.task_container_port_mappings, [{ containerPort = var.task_container_port, hostPort = var.task_container_port, protocol = "tcp" }])
   task_container_environment   = [for k, v in var.task_container_environment : { name = k, value = v }]
+  task_container_mount_points  = concat([for v in var.efs_volumes : { containerPath = v.mount_point, readOnly = v.readOnly, sourceVolume = v.name }], var.mount_points)
 
   log_configuration_options = merge({
-    "awslogs-group"         = aws_cloudwatch_log_group.main.name
+    "awslogs-group"         = var.log_group_name != "" ? var.log_group_name : aws_cloudwatch_log_group.main.0.name,
     "awslogs-region"        = data.aws_region.current.name
     "awslogs-stream-prefix" = "container"
   }, local.log_multiline_pattern)
@@ -146,10 +155,12 @@ locals {
     "stopTimeout"  = var.stop_timeout
     "command"      = var.task_container_command
     "environment"  = local.task_container_environment
+    "MountPoints"  = local.task_container_mount_points
     "logConfiguration" = {
       "logDriver" = "awslogs"
       "options"   = local.log_configuration_options
     }
+    "privileged" : var.privileged
   }, local.task_container_secrets, local.repository_credentials)
 }
 
@@ -161,11 +172,38 @@ resource "aws_ecs_task_definition" "task" {
   cpu                      = var.task_definition_cpu
   memory                   = var.task_definition_memory
   task_role_arn            = aws_iam_role.task.arn
-  container_definitions    = jsonencode([local.container_definition])
+  dynamic "volume" {
+    for_each = var.efs_volumes
+    content {
+      name = volume.value["name"]
+      efs_volume_configuration {
+        file_system_id     = volume.value["file_system_id"]
+        root_directory     = volume.value["root_directory"]
+        transit_encryption = "ENABLED"
+        authorization_config {
+          access_point_id = volume.value["access_point_id"]
+          iam             = "ENABLED"
+        }
+      }
+    }
+  }
+  dynamic "volume" {
+    for_each = var.volumes
+    content {
+      name = volume.value["name"]
+    }
+  }
+  container_definitions = jsonencode(concat([local.container_definition], var.sidecar_containers))
 }
 
 resource "aws_ecs_service" "service" {
-  depends_on                         = [null_resource.lb_exists]
+  depends_on = [
+    null_resource.lb_exists,
+    aws_iam_role_policy.task_execution,
+    aws_iam_role_policy.log_agent,
+    aws_iam_role_policy.read_repository_credentials,
+    aws_iam_role_policy.read_task_container_secrets,
+  ]
   name                               = var.name_prefix
   cluster                            = var.cluster_id
   task_definition                    = aws_ecs_task_definition.task.arn
@@ -175,10 +213,10 @@ resource "aws_ecs_service" "service" {
   deployment_maximum_percent         = var.deployment_maximum_percent
   health_check_grace_period_seconds  = var.lb_arn == "" ? null : var.health_check_grace_period_seconds
   wait_for_steady_state              = var.wait_for_steady_state
-
+  enable_execute_command             = var.enable_execute_command
   network_configuration {
     subnets          = var.private_subnet_ids
-    security_groups  = [aws_security_group.ecs_service.id]
+    security_groups  = concat([aws_security_group.ecs_service.id], var.service_sg_ids)
     assign_public_ip = var.task_container_assign_public_ip
   }
 
@@ -187,7 +225,7 @@ resource "aws_ecs_service" "service" {
     content {
       container_name   = var.container_name != "" ? var.container_name : var.name_prefix
       container_port   = var.task_container_port
-      target_group_arn = aws_lb_target_group.task.arn
+      target_group_arn = aws_lb_target_group.task[0].arn
     }
   }
 

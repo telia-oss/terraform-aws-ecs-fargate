@@ -65,6 +65,7 @@ variable "task_container_assign_public_ip" {
 variable "task_container_port" {
   description = "Port that the container exposes."
   type        = number
+  default     = 0
 }
 
 variable "task_container_port_mappings" {
@@ -107,6 +108,12 @@ variable "task_container_environment" {
   type        = map(string)
 }
 
+variable "log_group_name" {
+  description = "The name of the provided CloudWatch Logs log group to use."
+  default     = ""
+  type        = string
+}
+
 variable "log_retention_in_days" {
   description = "Number of days the logs will be retained in CloudWatch."
   default     = 30
@@ -122,6 +129,7 @@ variable "log_multiline_pattern" {
 variable "health_check" {
   description = "A health block containing health check settings for the target group. Overrides the defaults."
   type        = map(string)
+  default     = {}
 }
 
 variable "health_check_grace_period_seconds" {
@@ -196,6 +204,25 @@ variable "protocol_version" {
   type        = string
 }
 
+variable "efs_volumes" {
+  description = "Volumes definitions"
+  default     = []
+  type = list(object({
+    name            = string
+    file_system_id  = string
+    root_directory  = string
+    mount_point     = string
+    readOnly        = bool
+    access_point_id = string
+  }))
+}
+
+variable "privileged" {
+  description = "When this parameter is true, the container is given elevated privileges on the host container instance"
+  default     = false
+  type        = bool
+}
+
 variable "wait_for_steady_state" {
   description = "Wait for the service to reach a steady state (like aws ecs wait services-stable) before continuing."
   type        = bool
@@ -206,4 +233,47 @@ variable "deployment_circuit_breaker" {
   description = "Circuit breaking configuration for the ECS service."
   type        = object({ enable = bool, rollback = bool })
   default     = { enable = false, rollback = false }
+}
+
+
+variable "aws_iam_role_execution_suffix" {
+  description = "Name suffix for task execution IAM role"
+  type        = string
+  default     = "-task-execution-role"
+}
+
+variable "aws_iam_role_task_suffix" {
+  description = "Name suffix for task IAM role"
+  type        = string
+  default     = "-task-role"
+}
+
+variable "service_sg_ids" {
+  description = "List of security group to use"
+  type        = list(string)
+  default     = []
+}
+
+variable "enable_execute_command" {
+  description = "Enable aws ecs execute_command"
+  type        = bool
+  default     = false
+}
+
+variable "sidecar_containers" {
+  description = "List of sidecar containers"
+  type        = list(any)
+  default     = []
+}
+
+variable "mount_points" {
+  description = "List of mount points"
+  type        = list(any)
+  default     = []
+}
+
+variable "volumes" {
+  description = "List of volume"
+  type        = list(any)
+  default     = []
 }
