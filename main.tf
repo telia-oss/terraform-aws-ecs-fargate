@@ -137,7 +137,7 @@ locals {
   repository_credentials       = length(var.repository_credentials) > 0 ? { "repositoryCredentials" = { "credentialsParameter" = var.repository_credentials } } : null
   task_container_port_mappings = var.task_container_port == 0 ? var.task_container_port_mappings : concat(var.task_container_port_mappings, [{ containerPort = var.task_container_port, hostPort = var.task_container_port, protocol = "tcp" }])
   task_container_environment   = [for k, v in var.task_container_environment : { name = k, value = v }]
-  task_container_mount_points  = [for v in var.efs_volumes : { containerPath = v.mount_point, readOnly = v.readOnly, sourceVolume = v.name }]
+  task_container_mount_points  = concat([for v in var.efs_volumes : { containerPath = v.mount_point, readOnly = v.readOnly, sourceVolume = v.name }], var.mount_points)
 
   log_configuration_options = merge({
     "awslogs-group"         = aws_cloudwatch_log_group.main.name
@@ -185,7 +185,13 @@ resource "aws_ecs_task_definition" "task" {
       }
     }
   }
-  container_definitions = jsonencode([local.container_definition])
+  dynamic "volume" {
+    for_each = var.volumes
+    content {
+      name = volume.value["name"]
+    }
+  }
+  container_definitions = jsonencode(concat([local.container_definition], var.sidecar_containers))
 }
 
 resource "aws_ecs_service" "service" {
