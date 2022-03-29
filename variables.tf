@@ -114,6 +114,12 @@ variable "task_container_environment" {
   type        = map(string)
 }
 
+variable "log_group_name" {
+  description = "The name of the provided CloudWatch Logs log group to use."
+  default     = ""
+  type        = string
+}
+
 variable "log_retention_in_days" {
   description = "Number of days the logs will be retained in CloudWatch."
   default     = 30
@@ -246,4 +252,34 @@ variable "aws_iam_role_task_suffix" {
   description = "Name suffix for task IAM role"
   type        = string
   default     = "-task-role"
+}
+
+variable "service_sg_ids" {
+  description = "List of security group to use"
+  type        = list(string)
+  default     = []
+}
+
+variable "enable_execute_command" {
+  description = "Enable aws ecs execute_command"
+  type        = bool
+  default     = false
+}
+
+variable "sidecar_containers" {
+  description = "List of sidecar containers"
+  type        = list(any)
+  default     = []
+}
+
+variable "mount_points" {
+  description = "List of mount points"
+  type        = list(any)
+  default     = []
+}
+
+variable "volumes" {
+  description = "List of volume"
+  type        = list(any)
+  default     = []
 }
