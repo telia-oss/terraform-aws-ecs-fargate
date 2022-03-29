@@ -27,6 +27,20 @@ data "aws_iam_policy_document" "task_permissions" {
   }
 }
 
+# Task logging privileges & ssm
+data "aws_iam_policy_document" "ssm_task_permissions" {
+  statement {
+    effect    = "Allow"
+    resources = ["*"]
+    actions = [
+      "ssmmessages:CreateControlChannel",
+      "ssmmessages:CreateDataChannel",
+      "ssmmessages:OpenControlChannel",
+      "ssmmessages:OpenDataChannel"
+    ]
+  }
+}
+
 # Task ecr privileges
 data "aws_iam_policy_document" "task_execution_permissions" {
   statement {

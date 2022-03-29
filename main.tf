@@ -58,6 +58,12 @@ resource "aws_iam_role_policy" "log_agent" {
   policy = data.aws_iam_policy_document.task_permissions.json
 }
 
+resource "aws_iam_role_policy" "ssm_agent" {
+  count  = var.enable_execute_command ? 1 : 0
+  name   = "${var.name_prefix}-ssm-permissions"
+  role   = aws_iam_role.task.id
+  policy = data.aws_iam_policy_document.ssm_task_permissions.json
+}
 # ------------------------------------------------------------------------------
 # Security groups
 # ------------------------------------------------------------------------------
@@ -133,7 +139,7 @@ locals {
   repository_credentials       = length(var.repository_credentials) > 0 ? { "repositoryCredentials" = { "credentialsParameter" = var.repository_credentials } } : null
   task_container_port_mappings = var.task_container_port == 0 ? var.task_container_port_mappings : concat(var.task_container_port_mappings, [{ containerPort = var.task_container_port, hostPort = var.task_container_port, protocol = "tcp" }])
   task_container_environment   = [for k, v in var.task_container_environment : { name = k, value = v }]
-  task_container_mount_points  = [for v in var.efs_volumes : { containerPath = v.mount_point, readOnly = v.readOnly, sourceVolume = v.name }]
+  task_container_mount_points  = concat([for v in var.efs_volumes : { containerPath = v.mount_point, readOnly = v.readOnly, sourceVolume = v.name }], var.mount_points)
 
   log_configuration_options = merge({
     "awslogs-group"         = var.log_group_name != "" ? var.log_group_name : aws_cloudwatch_log_group.main.0.name,
@@ -181,7 +187,13 @@ resource "aws_ecs_task_definition" "task" {
       }
     }
   }
-  container_definitions = jsonencode([local.container_definition])
+  dynamic "volume" {
+    for_each = var.volumes
+    content {
+      name = volume.value["name"]
+    }
+  }
+  container_definitions = jsonencode(concat([local.container_definition], var.sidecar_containers))
 }
 
 resource "aws_ecs_service" "service" {
@@ -201,7 +213,7 @@ resource "aws_ecs_service" "service" {
   deployment_maximum_percent         = var.deployment_maximum_percent
   health_check_grace_period_seconds  = var.lb_arn == "" ? null : var.health_check_grace_period_seconds
   wait_for_steady_state              = var.wait_for_steady_state
-
+  enable_execute_command             = var.enable_execute_command
   network_configuration {
     subnets          = var.private_subnet_ids
     security_groups  = concat([aws_security_group.ecs_service.id], var.service_sg_ids)
