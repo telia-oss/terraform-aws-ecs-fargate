@@ -248,6 +248,12 @@ variable "service_sg_ids" {
   default     = []
 }
 
+variable "enable_execute_command" {
+  description = "Enable aws ecs execute_command"
+  type        = bool
+  default     = false
+}
+
 variable "sidecar_containers" {
   description = "List of sidecar containers"
   type        = list(any)

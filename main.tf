@@ -56,6 +56,12 @@ resource "aws_iam_role_policy" "log_agent" {
   policy = data.aws_iam_policy_document.task_permissions.json
 }
 
+resource "aws_iam_role_policy" "ssm_agent" {
+  count  = var.enable_execute_command ? 1 : 0
+  name   = "${var.name_prefix}-ssm-permissions"
+  role   = aws_iam_role.task.id
+  policy = data.aws_iam_policy_document.ssm_task_permissions.json
+}
 # ------------------------------------------------------------------------------
 # Security groups
 # ------------------------------------------------------------------------------
@@ -205,7 +211,7 @@ resource "aws_ecs_service" "service" {
   deployment_maximum_percent         = var.deployment_maximum_percent
   health_check_grace_period_seconds  = var.lb_arn == "" ? null : var.health_check_grace_period_seconds
   wait_for_steady_state              = var.wait_for_steady_state
-
+  enable_execute_command             = var.enable_execute_command
   network_configuration {
     subnets          = var.private_subnet_ids
     security_groups  = concat([aws_security_group.ecs_service.id], var.service_sg_ids)
