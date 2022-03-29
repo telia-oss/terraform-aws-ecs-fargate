@@ -48,7 +48,7 @@ output "service_name" {
 
 output "log_group_name" {
   description = "The name of the Cloudwatch log group for the task."
-  value       = aws_cloudwatch_log_group.main.name
+  value       = var.log_group_name != "" ? var.log_group_name : aws_cloudwatch_log_group.main.0.name
 }
 
 output "desired_count" {
