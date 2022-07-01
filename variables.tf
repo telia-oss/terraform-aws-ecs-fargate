@@ -277,3 +277,9 @@ variable "volumes" {
   type        = list(any)
   default     = []
 }
+
+variable "target_groups" {
+  description = "List of target group configuration, used to registed a service to multiple target groups"
+  type        = list(any)
+  default     = []
+}
