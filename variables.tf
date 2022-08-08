@@ -279,10 +279,10 @@ variable "volumes" {
 }
 
 variable "extra_target_groups" {
-  description = "List of additional target group configurations used to register a service to multiple target groups"
+  description = "List of extra target group configurations used to register a service to multiple target groups"
   type = list(object({
     port             = number
-    target_group_arn = string
+    arn = string
   }))
   default = []
 }
