@@ -2,7 +2,7 @@
 
 resource "aws_lb_target_group" "extra" {
   name        = "${var.name_prefix}-3000"
-  port        = 3000  // extra port the Fargate service expose
+  port        = 3000 // extra port the Fargate service expose
   protocol    = "HTTP"
   target_type = "ip"
   vpc_id      = data.aws_vpc.main.id
