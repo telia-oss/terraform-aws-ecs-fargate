@@ -278,8 +278,8 @@ variable "volumes" {
   default     = []
 }
 
-variable "target_groups" {
-  description = "List of target group configuration, used to registed a service to multiple target groups"
+variable "extra_target_groups" {
+  description = "List of additional target groups configurations used to register a service to multiple target groups"
   type        = list(any)
   default     = []
 }

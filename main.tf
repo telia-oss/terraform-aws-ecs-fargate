@@ -230,7 +230,7 @@ resource "aws_ecs_service" "service" {
   }
 
   dynamic "load_balancer" {
-    for_each = length(var.target_groups) == 0 ? [] : var.target_groups
+    for_each = length(var.extra_target_groups) == 0 ? [] : var.extra_target_groups
     content {
       container_name   = var.container_name != "" ? var.container_name : var.name_prefix
       container_port   = load_balancer.value.port
