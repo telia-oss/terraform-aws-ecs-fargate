@@ -234,7 +234,7 @@ resource "aws_ecs_service" "service" {
     content {
       container_name   = var.container_name != "" ? var.container_name : var.name_prefix
       container_port   = load_balancer.value.port
-      target_group_arn = load_balancer.value.target_group_arn
+      target_group_arn = load_balancer.value.arn
     }
   }
 
