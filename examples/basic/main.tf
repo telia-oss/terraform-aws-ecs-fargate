@@ -101,6 +101,13 @@ module "fargate" {
     }
   ]
 
+  extra_target_groups = [
+    {
+      port = 3000,
+      arn  = aws_lb_target_group.extra.arn
+    }
+  ]
+
   task_container_environment = {
     TEST_VARIABLE = "TEST_VALUE"
   }

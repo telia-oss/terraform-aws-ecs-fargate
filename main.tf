@@ -229,6 +229,15 @@ resource "aws_ecs_service" "service" {
     }
   }
 
+  dynamic "load_balancer" {
+    for_each = length(var.extra_target_groups) == 0 ? [] : var.extra_target_groups
+    content {
+      container_name   = var.container_name != "" ? var.container_name : var.name_prefix
+      container_port   = load_balancer.value.port
+      target_group_arn = load_balancer.value.arn
+    }
+  }
+
   deployment_controller {
     # The deployment controller type to use. Valid values: CODE_DEPLOY, ECS.
     type = var.deployment_controller_type
