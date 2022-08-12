@@ -161,6 +161,7 @@ locals {
       "options"   = local.log_configuration_options
     }
     "privileged" : var.privileged
+    "readonlyRootFilesystem" : var.readonlyRootFilesystem
   }, local.task_container_secrets, local.repository_credentials)
 }
 

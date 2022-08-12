@@ -223,6 +223,12 @@ variable "privileged" {
   type        = bool
 }
 
+variable "readonlyRootFilesystem" {
+  description = "When this parameter is true, the container is given read-only access to its root file system."
+  default     = false
+  type        = bool
+}
+
 variable "wait_for_steady_state" {
   description = "Wait for the service to reach a steady state (like aws ecs wait services-stable) before continuing."
   type        = bool
