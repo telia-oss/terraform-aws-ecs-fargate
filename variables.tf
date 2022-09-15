@@ -96,6 +96,16 @@ variable "task_definition_memory" {
   type        = number
 }
 
+variable "task_definition_os_family" {
+  description = "The OS of the container."
+  default     = "LINUX"
+}
+
+variable "task_definition_cpu_arch" {
+  description = "CPU architecture of the container."
+  default     = "X86_64"
+}
+
 variable "task_container_command" {
   description = "The command that is passed to the container."
   default     = []
