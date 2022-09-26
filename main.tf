@@ -7,6 +7,7 @@ data "aws_region" "current" {}
 # Cloudwatch
 # ------------------------------------------------------------------------------
 resource "aws_cloudwatch_log_group" "main" {
+  count             = var.log_group_name != "" ? 0 : 1
   name              = var.name_prefix
   retention_in_days = var.log_retention_in_days
   tags              = var.tags
@@ -51,11 +52,18 @@ resource "aws_iam_role" "task" {
 }
 
 resource "aws_iam_role_policy" "log_agent" {
+  count  = var.log_group_name != "" ? 0 : 1
   name   = "${var.name_prefix}-log-permissions"
   role   = aws_iam_role.task.id
   policy = data.aws_iam_policy_document.task_permissions.json
 }
 
+resource "aws_iam_role_policy" "ssm_agent" {
+  count  = var.enable_execute_command ? 1 : 0
+  name   = "${var.name_prefix}-ssm-permissions"
+  role   = aws_iam_role.task.id
+  policy = data.aws_iam_policy_document.ssm_task_permissions.json
+}
 # ------------------------------------------------------------------------------
 # Security groups
 # ------------------------------------------------------------------------------
@@ -131,10 +139,10 @@ locals {
   repository_credentials       = length(var.repository_credentials) > 0 ? { "repositoryCredentials" = { "credentialsParameter" = var.repository_credentials } } : null
   task_container_port_mappings = var.task_container_port == 0 ? var.task_container_port_mappings : concat(var.task_container_port_mappings, [{ containerPort = var.task_container_port, hostPort = var.task_container_port, protocol = "tcp" }])
   task_container_environment   = [for k, v in var.task_container_environment : { name = k, value = v }]
-  task_container_mount_points  = [for v in var.efs_volumes : { containerPath = v.mount_point, readOnly = v.readOnly, sourceVolume = v.name }]
+  task_container_mount_points  = concat([for v in var.efs_volumes : { containerPath = v.mount_point, readOnly = v.readOnly, sourceVolume = v.name }], var.mount_points)
 
   log_configuration_options = merge({
-    "awslogs-group"         = aws_cloudwatch_log_group.main.name
+    "awslogs-group"         = var.log_group_name != "" ? var.log_group_name : aws_cloudwatch_log_group.main.0.name,
     "awslogs-region"        = data.aws_region.current.name
     "awslogs-stream-prefix" = "container"
   }, local.log_multiline_pattern)
@@ -153,6 +161,7 @@ locals {
       "options"   = local.log_configuration_options
     }
     "privileged" : var.privileged
+    "readonlyRootFilesystem" : var.readonlyRootFilesystem
   }, local.task_container_secrets, local.repository_credentials)
 }
 
@@ -179,7 +188,17 @@ resource "aws_ecs_task_definition" "task" {
       }
     }
   }
-  container_definitions = jsonencode([local.container_definition])
+  dynamic "volume" {
+    for_each = var.volumes
+    content {
+      name = volume.value["name"]
+    }
+  }
+  container_definitions = jsonencode(concat([local.container_definition], var.sidecar_containers))
+  runtime_platform {
+    operating_system_family = var.task_definition_os_family
+    cpu_architecture        = var.task_definition_cpu_arch
+  }
 }
 
 resource "aws_ecs_service" "service" {
@@ -199,7 +218,7 @@ resource "aws_ecs_service" "service" {
   deployment_maximum_percent         = var.deployment_maximum_percent
   health_check_grace_period_seconds  = var.lb_arn == "" ? null : var.health_check_grace_period_seconds
   wait_for_steady_state              = var.wait_for_steady_state
-
+  enable_execute_command             = var.enable_execute_command
   network_configuration {
     subnets          = var.private_subnet_ids
     security_groups  = concat([aws_security_group.ecs_service.id], var.service_sg_ids)
@@ -212,6 +231,15 @@ resource "aws_ecs_service" "service" {
       container_name   = var.container_name != "" ? var.container_name : var.name_prefix
       container_port   = var.task_container_port
       target_group_arn = aws_lb_target_group.task[0].arn
+    }
+  }
+
+  dynamic "load_balancer" {
+    for_each = length(var.extra_target_groups) == 0 ? [] : var.extra_target_groups
+    content {
+      container_name   = var.container_name != "" ? var.container_name : var.name_prefix
+      container_port   = load_balancer.value.port
+      target_group_arn = load_balancer.value.arn
     }
   }
 
