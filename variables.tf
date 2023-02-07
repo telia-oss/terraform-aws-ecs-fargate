@@ -118,6 +118,12 @@ variable "task_container_environment" {
   type        = map(string)
 }
 
+variable "task_container_environment_file" {
+  description = "The environment variables to pass to a container."
+  default     = []
+  type        = list(object({ type = string, value = string }))
+}
+
 variable "log_group_name" {
   description = "The name of the provided CloudWatch Logs log group to use."
   default     = ""

@@ -148,14 +148,15 @@ locals {
   }, local.log_multiline_pattern)
 
   container_definition = merge({
-    "name"         = var.container_name != "" ? var.container_name : var.name_prefix
-    "image"        = var.task_container_image,
-    "essential"    = true
-    "portMappings" = local.task_container_port_mappings
-    "stopTimeout"  = var.stop_timeout
-    "command"      = var.task_container_command
-    "environment"  = local.task_container_environment
-    "MountPoints"  = local.task_container_mount_points
+    "name"             = var.container_name != "" ? var.container_name : var.name_prefix
+    "image"            = var.task_container_image,
+    "essential"        = true
+    "portMappings"     = local.task_container_port_mappings
+    "stopTimeout"      = var.stop_timeout
+    "command"          = var.task_container_command
+    "environment"      = local.task_container_environment
+    "environmentFiles" = var.task_container_environment_file
+    "MountPoints"      = local.task_container_mount_points
     "logConfiguration" = {
       "logDriver" = "awslogs"
       "options"   = local.log_configuration_options
