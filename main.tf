@@ -148,19 +148,21 @@ locals {
   }, local.log_multiline_pattern)
 
   container_definition = merge({
-    "name"         = var.container_name != "" ? var.container_name : var.name_prefix
-    "image"        = var.task_container_image,
-    "essential"    = true
-    "portMappings" = local.task_container_port_mappings
-    "stopTimeout"  = var.stop_timeout
-    "command"      = var.task_container_command
-    "environment"  = local.task_container_environment
-    "MountPoints"  = local.task_container_mount_points
+    "name"             = var.container_name != "" ? var.container_name : var.name_prefix
+    "image"            = var.task_container_image,
+    "essential"        = true
+    "portMappings"     = local.task_container_port_mappings
+    "stopTimeout"      = var.stop_timeout
+    "command"          = var.task_container_command
+    "environment"      = local.task_container_environment
+    "environmentFiles" = var.task_container_environment_file
+    "MountPoints"      = local.task_container_mount_points
     "logConfiguration" = {
       "logDriver" = "awslogs"
       "options"   = local.log_configuration_options
     }
     "privileged" : var.privileged
+    "readonlyRootFilesystem" : var.readonlyRootFilesystem
   }, local.task_container_secrets, local.repository_credentials)
 }
 
@@ -194,6 +196,10 @@ resource "aws_ecs_task_definition" "task" {
     }
   }
   container_definitions = jsonencode(concat([local.container_definition], var.sidecar_containers))
+  runtime_platform {
+    operating_system_family = var.task_definition_os_family
+    cpu_architecture        = var.task_definition_cpu_arch
+  }
 }
 
 resource "aws_ecs_service" "service" {
@@ -226,6 +232,15 @@ resource "aws_ecs_service" "service" {
       container_name   = var.container_name != "" ? var.container_name : var.name_prefix
       container_port   = var.task_container_port
       target_group_arn = aws_lb_target_group.task[0].arn
+    }
+  }
+
+  dynamic "load_balancer" {
+    for_each = length(var.extra_target_groups) == 0 ? [] : var.extra_target_groups
+    content {
+      container_name   = var.container_name != "" ? var.container_name : var.name_prefix
+      container_port   = load_balancer.value.port
+      target_group_arn = load_balancer.value.arn
     }
   }
 

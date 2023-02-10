@@ -102,6 +102,16 @@ variable "task_definition_memory" {
   type        = number
 }
 
+variable "task_definition_os_family" {
+  description = "The OS of the container."
+  default     = "LINUX"
+}
+
+variable "task_definition_cpu_arch" {
+  description = "CPU architecture of the container."
+  default     = "X86_64"
+}
+
 variable "task_container_command" {
   description = "The command that is passed to the container."
   default     = []
@@ -112,6 +122,12 @@ variable "task_container_environment" {
   description = "The environment variables to pass to a container."
   default     = {}
   type        = map(string)
+}
+
+variable "task_container_environment_file" {
+  description = "The environment variables to pass to a container."
+  default     = []
+  type        = list(object({ type = string, value = string }))
 }
 
 variable "log_group_name" {
@@ -229,6 +245,12 @@ variable "privileged" {
   type        = bool
 }
 
+variable "readonlyRootFilesystem" {
+  description = "When this parameter is true, the container is given read-only access to its root file system."
+  default     = false
+  type        = bool
+}
+
 variable "wait_for_steady_state" {
   description = "Wait for the service to reach a steady state (like aws ecs wait services-stable) before continuing."
   type        = bool
@@ -282,4 +304,13 @@ variable "volumes" {
   description = "List of volume"
   type        = list(any)
   default     = []
+}
+
+variable "extra_target_groups" {
+  description = "List of extra target group configurations used to register a service to multiple target groups"
+  type = list(object({
+    port = number
+    arn  = string
+  }))
+  default = []
 }

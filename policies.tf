@@ -91,7 +91,7 @@ data "aws_iam_policy_document" "task_container_secrets" {
 
     resources = concat(
       [data.aws_kms_key.task_container_secrets_key.arn],
-      [for i in var.task_container_secrets : i["valueFrom"]]
+      [for i in var.task_container_secrets : replace(i["valueFrom"], "/:[^:]+::$/", "")]
     )
     actions = [
       "secretsmanager:GetSecretValue",

@@ -46,7 +46,7 @@ tasks:
           echo "  √ terraform fmt"
         fi
 
-        if ! terraform init -backend=false -input=false -get=true -get-plugins=true -no-color > /dev/null; then
+        if ! terraform init -backend=false -input=false -get=true -no-color > /dev/null; then
           echo "  ✗ terraform init" && exit 1
         else
           echo "  √ terraform init"
