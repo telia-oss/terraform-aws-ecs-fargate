@@ -145,7 +145,7 @@ locals {
     "awslogs-group"         = var.log_group_name != "" ? var.log_group_name : aws_cloudwatch_log_group.main.0.name,
     "awslogs-region"        = data.aws_region.current.name
     "awslogs-stream-prefix" = "container"
-  }, local.log_multiline_pattern)
+  }, local.log_multiline_pattern, var.log_configuration_options_overrides)
 
   container_definition = merge({
     "name"             = var.container_name != "" ? var.container_name : var.name_prefix

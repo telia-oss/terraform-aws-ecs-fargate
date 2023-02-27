@@ -142,6 +142,12 @@ variable "log_multiline_pattern" {
   type        = string
 }
 
+variable "log_configuration_options_overrides" {
+  description = "Overrides for log configuration options"
+  default     = {}
+  type        = any
+}
+
 variable "health_check" {
   description = "A health block containing health check settings for the target group. Overrides the defaults."
   type        = map(string)
