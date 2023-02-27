@@ -142,6 +142,12 @@ variable "log_multiline_pattern" {
   type        = string
 }
 
+variable "log_configuration_driver" {
+  description = "The log driver that the container definition will use."
+  default     = "awslogs"
+  type        = string
+}
+
 variable "health_check" {
   description = "A health block containing health check settings for the target group. Overrides the defaults."
   type        = map(string)
