@@ -284,7 +284,7 @@ variable "enable_execute_command" {
 
 variable "sidecar_containers" {
   description = "List of sidecar containers"
-  type        = list(any)
+  type        = any
   default     = []
 }
 
