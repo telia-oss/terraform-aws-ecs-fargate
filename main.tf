@@ -212,7 +212,7 @@ resource "aws_ecs_service" "service" {
   ]
   name                               = var.name_prefix
   cluster                            = var.cluster_id
-  task_definition                    = var.task_definition != "" ? aws_ecs_task_definition.task.arn : var.task_definition
+  task_definition                    = var.task_definition != "" ? var.task_definition : aws_ecs_task_definition.task.arn
   desired_count                      = var.desired_count
   launch_type                        = "FARGATE"
   deployment_minimum_healthy_percent = var.deployment_minimum_healthy_percent
