@@ -163,6 +163,7 @@ locals {
     }
     "privileged" : var.privileged
     "readonlyRootFilesystem" : var.readonlyRootFilesystem
+    "healthCheck" : var.container_health_check
   }, local.task_container_secrets, local.repository_credentials)
 }
 
