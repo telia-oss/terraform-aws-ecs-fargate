@@ -84,6 +84,12 @@ variable "task_container_protocol" {
   type        = string
 }
 
+variable "task_definition" {
+  description = "Provided task definition for the service."
+  default     = ""
+  type        = string
+}
+
 variable "task_definition_cpu" {
   description = "Amount of CPU to reserve for the task."
   default     = 256
@@ -116,6 +122,12 @@ variable "task_container_environment" {
   description = "The environment variables to pass to a container."
   default     = {}
   type        = map(string)
+}
+
+variable "task_container_environment_file" {
+  description = "The environment variables to pass to a container."
+  default     = []
+  type        = list(object({ type = string, value = string }))
 }
 
 variable "log_group_name" {
@@ -278,7 +290,7 @@ variable "enable_execute_command" {
 
 variable "sidecar_containers" {
   description = "List of sidecar containers"
-  type        = list(any)
+  type        = any
   default     = []
 }
 
