@@ -306,6 +306,12 @@ variable "volumes" {
   default     = []
 }
 
+variable "capacity_provider_strategy" {
+  description = "List capacity provider strategy"
+  type        = list(any)
+  default     = []
+}
+
 variable "extra_target_groups" {
   description = "List of extra target group configurations used to register a service to multiple target groups"
   type = list(object({
