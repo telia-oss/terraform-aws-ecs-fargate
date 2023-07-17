@@ -262,6 +262,14 @@ resource "aws_ecs_service" "service" {
       container_name = var.container_name != "" ? var.container_name : var.name_prefix
     }
   }
+  dynamic "capacity_provider_strategy" {
+    for_each = var.capacity_provider_strategy
+    content {
+      base              = lookup(capacity_provider_strategy.value, "base", null)
+      capacity_provider = lookup(capacity_provider_strategy.value, "capacity_provider", null)
+      weight            = lookup(capacity_provider_strategy.value, "weight", null)
+    }
+  }
 }
 
 # HACK: The workaround used in ecs/service does not work for some reason in this module, this fixes the following error:
