@@ -214,7 +214,7 @@ resource "aws_ecs_service" "service" {
   cluster                            = var.cluster_id
   task_definition                    = var.task_definition != "" ? var.task_definition : aws_ecs_task_definition.task.arn
   desired_count                      = var.desired_count
-  launch_type                        = "FARGATE"
+  launch_type                        = length(var.capacity_provider_strategy) == 0 ? "FARGATE" : null
   deployment_minimum_healthy_percent = var.deployment_minimum_healthy_percent
   deployment_maximum_percent         = var.deployment_maximum_percent
   health_check_grace_period_seconds  = var.lb_arn == "" ? null : var.health_check_grace_period_seconds
