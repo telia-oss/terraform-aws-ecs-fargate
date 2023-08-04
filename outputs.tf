@@ -11,6 +11,11 @@ output "target_group_arn" {
   value       = var.lb_arn == "" ? null : aws_lb_target_group.task[0].arn
 }
 
+output "target_group_arn_suffix" {
+  description = "The ARN suffix for use with CloudWatch Metrics."
+  value       = var.lb_arn == "" ? null : aws_lb_target_group.task[0].arn_suffix
+}
+
 output "target_group_name" {
   description = "The Name of the Target Group."
   value       = var.lb_arn == "" ? null : aws_lb_target_group.task[0].name

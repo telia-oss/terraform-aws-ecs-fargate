@@ -328,3 +328,13 @@ variable "container_health_check" {
     }
   )
 }
+
+variable "task_container_ulimits" {
+  type = list(object({
+    name      = string
+    hardLimit = number
+    softLimit = number
+  }))
+  description = "(Optional) Container ulimit settings. This is a list of maps, where each map should contain \"name\", \"hardLimit\" and \"softLimit\""
+  default     = null
+}
