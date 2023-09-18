@@ -320,3 +320,27 @@ variable "extra_target_groups" {
   }))
   default = []
 }
+
+variable "container_health_check" {
+  description = "An ECS TaskDefinition HealthCheck object to set in each container"
+  default     = null
+  type = object(
+    {
+      command     = list(string)
+      interval    = number
+      retries     = number
+      startPeriod = number
+      timeout     = number
+    }
+  )
+}
+
+variable "task_container_ulimits" {
+  type = list(object({
+    name      = string
+    hardLimit = number
+    softLimit = number
+  }))
+  description = "(Optional) Container ulimit settings. This is a list of maps, where each map should contain \"name\", \"hardLimit\" and \"softLimit\""
+  default     = null
+}

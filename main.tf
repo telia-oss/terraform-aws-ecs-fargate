@@ -93,7 +93,6 @@ resource "aws_security_group_rule" "egress_service" {
 # LB Target group
 # ------------------------------------------------------------------------------
 resource "aws_lb_target_group" "task" {
-  name        = "${var.name_prefix}-${var.task_container_port}"
   count       = var.lb_arn == "" ? 0 : 1
   vpc_id      = var.vpc_id
   protocol    = var.task_container_protocol
@@ -157,12 +156,14 @@ locals {
     "environment"      = local.task_container_environment
     "environmentFiles" = var.task_container_environment_file
     "MountPoints"      = local.task_container_mount_points
+    "ulimits"          = var.task_container_ulimits
     "logConfiguration" = {
       "logDriver" = "awslogs"
       "options"   = local.log_configuration_options
     }
     "privileged" : var.privileged
     "readonlyRootFilesystem" : var.readonlyRootFilesystem
+    "healthCheck" : var.container_health_check
   }, local.task_container_secrets, local.repository_credentials)
 }
 
