@@ -24,6 +24,11 @@ variable "task_container_secrets_kms_key" {
   default     = "alias/aws/secretsmanager"
 }
 
+variable "task_container_health_check" {
+  description = "https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_HealthCheck.html"
+  default     = ""
+}
+
 variable "vpc_id" {
   description = "The VPC ID."
   type        = string
