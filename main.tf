@@ -215,7 +215,7 @@ resource "aws_ecs_service" "service" {
   cluster                            = var.cluster_id
   task_definition                    = var.task_definition != "" ? var.task_definition : aws_ecs_task_definition.task.arn
   desired_count                      = var.desired_count
-  launch_type                        = "FARGATE"
+  launch_type                        = length(var.capacity_provider_strategy) == 0 ? "FARGATE" : null
   deployment_minimum_healthy_percent = var.deployment_minimum_healthy_percent
   deployment_maximum_percent         = var.deployment_maximum_percent
   health_check_grace_period_seconds  = var.lb_arn == "" ? null : var.health_check_grace_period_seconds
@@ -261,6 +261,14 @@ resource "aws_ecs_service" "service" {
       registry_arn   = var.service_registry_arn
       container_port = var.with_service_discovery_srv_record ? var.task_container_port : null
       container_name = var.container_name != "" ? var.container_name : var.name_prefix
+    }
+  }
+  dynamic "capacity_provider_strategy" {
+    for_each = var.capacity_provider_strategy
+    content {
+      base              = lookup(capacity_provider_strategy.value, "base", null)
+      capacity_provider = lookup(capacity_provider_strategy.value, "capacity_provider", null)
+      weight            = lookup(capacity_provider_strategy.value, "weight", null)
     }
   }
 }
