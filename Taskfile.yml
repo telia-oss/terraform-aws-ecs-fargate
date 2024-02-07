@@ -1,4 +1,4 @@
-version: '2'
+version: '3'
 
 env:
   TERM: screen-256color
@@ -36,7 +36,7 @@ tasks:
 
       CWD=$PWD
 
-      for d in $DIRECTORIES; do 
+      for d in $DIRECTORIES; do
         cd $d
         echo "${BOLD}$PWD:${NORM}"
 
@@ -66,4 +66,4 @@ tasks:
     silent: true
     cmds:
     - go test -v ./... -timeout=1h
-    
+
