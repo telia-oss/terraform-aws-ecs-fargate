@@ -196,6 +196,11 @@ resource "aws_ecs_task_definition" "task" {
       name = volume.value["name"]
     }
   }
+
+  ephemeral_storage {
+    size_in_gib = var.task_ephemeral_storage
+  }
+
   container_definitions = jsonencode(concat([local.container_definition], var.sidecar_containers))
   runtime_platform {
     operating_system_family = var.task_definition_os_family

@@ -107,6 +107,12 @@ variable "task_definition_memory" {
   type        = number
 }
 
+variable "task_ephemeral_storage" {
+  description = "Amount of ephemeral storage (GiB) for the task"
+  default     = 21
+  type        = number
+}
+
 variable "task_definition_os_family" {
   description = "The OS of the container."
   default     = "LINUX"
