@@ -146,6 +146,8 @@ locals {
     "awslogs-group"         = var.log_group_name != "" ? var.log_group_name : aws_cloudwatch_log_group.main.0.name,
     "awslogs-region"        = data.aws_region.current.name
     "awslogs-stream-prefix" = "container"
+    "mode"                  = var.aws_log_driver_mode
+    "max-buffer-size"       = var.aws_log_max_buffer_size
   }, local.log_multiline_pattern)
 
   container_definition = merge({

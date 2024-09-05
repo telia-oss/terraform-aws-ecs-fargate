@@ -153,6 +153,18 @@ variable "log_multiline_pattern" {
   type        = string
 }
 
+variable "aws_log_driver_mode" {
+  description = "The log mode option controls whether to use the blocking (default) or non-blocking log delivery"
+  default     = "blocking"
+  type        = string
+}
+
+variable "aws_log_max_buffer_size" {
+  description = "Controls the size of the buffer used for intermediate log message storage when aws_log_driver_mode is set to non-blocking"
+  default     = "1m"
+  type        = string
+}
+
 variable "health_check" {
   description = "A health block containing health check settings for the target group. Overrides the defaults."
   type        = map(string)
