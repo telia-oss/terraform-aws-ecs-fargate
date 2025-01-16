@@ -20,6 +20,7 @@ resource "aws_iam_role" "execution" {
   name                 = "${var.name_prefix}${var.aws_iam_role_execution_suffix}"
   assume_role_policy   = data.aws_iam_policy_document.task_assume.json
   permissions_boundary = var.task_role_permissions_boundary_arn
+  tags                 = var.tags
 }
 
 resource "aws_iam_role_policy" "task_execution" {
@@ -49,6 +50,7 @@ resource "aws_iam_role" "task" {
   name                 = "${var.name_prefix}${var.aws_iam_role_task_suffix}"
   assume_role_policy   = data.aws_iam_policy_document.task_assume.json
   permissions_boundary = var.task_role_permissions_boundary_arn
+  tags                 = var.tags
 }
 
 resource "aws_iam_role_policy" "log_agent" {
@@ -175,6 +177,7 @@ resource "aws_ecs_task_definition" "task" {
   cpu                      = var.task_definition_cpu
   memory                   = var.task_definition_memory
   task_role_arn            = aws_iam_role.task.arn
+  tags                     = var.tags
   dynamic "volume" {
     for_each = var.efs_volumes
     content {
@@ -221,6 +224,7 @@ resource "aws_ecs_service" "service" {
   health_check_grace_period_seconds  = var.lb_arn == "" ? null : var.health_check_grace_period_seconds
   wait_for_steady_state              = var.wait_for_steady_state
   enable_execute_command             = var.enable_execute_command
+  tags                               = var.tags
   network_configuration {
     subnets          = var.private_subnet_ids
     security_groups  = concat([aws_security_group.ecs_service.id], var.service_sg_ids)
