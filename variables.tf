@@ -31,7 +31,7 @@ variable "task_container_health_check" {
 
 variable "task_container_depends_on" {
   description = "Allow adding container dependencies."
-  type        = list(object({ containerName = string, condtition = string }))
+  type        = list(object({ containerName = string, condition = string }))
   default     = []
 }
 
