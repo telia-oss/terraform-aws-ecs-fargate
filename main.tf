@@ -158,6 +158,7 @@ locals {
     "environment"      = local.task_container_environment
     "environmentFiles" = var.task_container_environment_file
     "MountPoints"      = local.task_container_mount_points
+    "dependsOn"        = var.task_container_depends_on
     "logConfiguration" = {
       "logDriver" = "awslogs"
       "options"   = local.log_configuration_options

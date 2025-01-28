@@ -29,6 +29,12 @@ variable "task_container_health_check" {
   default     = ""
 }
 
+variable "task_container_depends_on" {
+  description = "Allow adding container dependencies."
+  type        = list(object({ containerName = string, condtition = string }))
+  default     = []
+}
+
 variable "vpc_id" {
   description = "The VPC ID."
   type        = string
