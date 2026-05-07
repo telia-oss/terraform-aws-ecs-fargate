@@ -1,0 +1,11 @@
+name: Sign KCP Manifest
+
+on:
+  push:
+    branches: [main, master]
+    paths: [knowledge.yaml]
+
+jobs:
+  sign:
+    uses: Cantara/.github/.github/workflows/sign-kcp.yml@main
+    secrets: inherit
