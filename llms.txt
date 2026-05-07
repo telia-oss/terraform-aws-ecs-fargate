@@ -1,0 +1,19 @@
+# terraform-aws-ecs-fargate
+
+> Terraform module which creates Fargate ECS resources on AWS.
+
+Part of the [Cantara](https://wiki.cantara.no) open source ecosystem.
+Apache-2.0. HCL.
+
+## Structured Navigation (for AI agents)
+
+This repository ships a KCP v0.14 manifest:
+https://raw.githubusercontent.com/Cantara/terraform-aws-ecs-fargate/main/knowledge.yaml
+
+Signing key (delegated to Cantara org): https://wiki.cantara.no/.well-known/kcp-signing-key.pub
+
+## Related
+
+- [Cantara wiki](https://wiki.cantara.no) — Full project documentation
+- [knowledge-context-protocol](https://github.com/Cantara/knowledge-context-protocol) — KCP spec
+- [kcp-commands](https://github.com/Cantara/kcp-commands) — Claude Code hook
