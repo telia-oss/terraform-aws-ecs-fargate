@@ -1,0 +1,42 @@
+version: "0.14"
+
+entity:
+  name: terraform-aws-ecs-fargate
+  type: open-source-library
+  description: >
+    Terraform module which creates Fargate ECS resources on AWS.
+
+authority:
+  owner: Cantara — Norwegian Software Development Foundation
+  repo: https://github.com/Cantara/terraform-aws-ecs-fargate
+  license: Apache-2.0
+  org_manifest: https://wiki.cantara.no/knowledge.yaml
+
+discovery:
+  provenance: canonical
+  confidence: medium
+  staleness_days: 30
+
+signing:
+  scheme: ed25519
+  scope: this-manifest
+  public_key: https://wiki.cantara.no/.well-known/kcp-signing-key.pub
+
+kcp_version: "0.14"
+project: terraform-aws-ecs-fargate
+language: en
+license: "Apache-2.0"
+runtime: HCL
+indexing: open
+updated: "2026-05-07"
+
+
+units:
+
+  - id: readme
+    path: README.md
+    intent: "What is terraform-aws-ecs-fargate, what does it do, and how do I install and use it?"
+    scope: global
+    audience: [human, agent, developer]
+    validated: "2026-05-07"
+    triggers: [overview, install, usage, terraform-aws-ecs-fargate, getting started]
