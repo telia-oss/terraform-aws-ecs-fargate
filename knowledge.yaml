@@ -1,4 +1,3 @@
-version: "0.14"
 
 entity:
   name: terraform-aws-ecs-fargate
@@ -23,7 +22,7 @@ signing:
   public_key: https://wiki.cantara.no/.well-known/kcp-signing-key.pub
   signature: https://raw.githubusercontent.com/Cantara/terraform-aws-ecs-fargate/master/knowledge.yaml.sig
 
-kcp_version: "0.14"
+kcp_version: "0.26"
 project: terraform-aws-ecs-fargate
 language: en
 license: "Apache-2.0"
@@ -41,3 +40,11 @@ units:
     audience: [human, agent, developer]
     validated: "2026-05-07"
     triggers: [overview, install, usage, terraform-aws-ecs-fargate, getting started]
+
+# Serving Endpoint Binding (KCP SPEC v0.26 §3.12): authoritative manifest URL
+# and authorized MCP representative. Ignored by pre-0.26 verifiers.
+serving:
+  manifest:
+    - https://raw.githubusercontent.com/Cantara/terraform-aws-ecs-fargate/master/knowledge.yaml
+  mcp:
+    - https://mcp.cantara.no/mcp
