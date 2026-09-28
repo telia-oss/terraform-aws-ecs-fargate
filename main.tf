@@ -201,6 +201,13 @@ resource "aws_ecs_task_definition" "task" {
     operating_system_family = var.task_definition_os_family
     cpu_architecture        = var.task_definition_cpu_arch
   }
+  dynamic "ephemeral_storage" {
+    # Configurable ephemeral storage is only supported for Linux Fargate tasks.
+    for_each = var.task_ephemeral_storage_size_in_gib != null && var.task_definition_os_family == "LINUX" ? [var.task_ephemeral_storage_size_in_gib] : []
+    content {
+      size_in_gib = ephemeral_storage.value
+    }
+  }
 }
 
 resource "aws_ecs_service" "service" {
