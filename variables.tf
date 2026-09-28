@@ -117,6 +117,12 @@ variable "task_definition_cpu_arch" {
   default     = "X86_64"
 }
 
+variable "task_ephemeral_storage_size_in_gib" {
+  description = "Amount of ephemeral storage (GiB) to allocate for the task, between 21 and 200. Only supported for Linux tasks; leave as null to use the default (20 GiB free, not billed)."
+  default     = null
+  type        = number
+}
+
 variable "task_container_command" {
   description = "The command that is passed to the container."
   default     = []
